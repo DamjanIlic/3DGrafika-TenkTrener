@@ -264,7 +264,7 @@ void drawRectangle(float x1, float x2, float y1, float y2, int shaderProgram, fl
 
 
 
-// Funkcije za kretanje kamere pomoću tastature i misa
+// Funkcije za kretanje kamere pomocu tastature i misa
 void processInput(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 
@@ -307,7 +307,7 @@ int main(void)
     //
     // ++++++++++++++++++++++++++++++++++++++++++++++++++++++ Inicijalizacija Culling-a ++++++++++++++++++++++++++++++++++++++++++++++++++++++
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);        // Omogućava culling
+    glEnable(GL_CULL_FACE);        // Omogucava culling
     glCullFace(GL_BACK);           // Skida zadnje strane
     glFrontFace(GL_CCW);           // Postavlja CCW kao spoljne strane (counter-clockwise)
 
@@ -350,12 +350,12 @@ int main(void)
     //    -0.5f, -0.5f, -0.5f,   1.0f, 0.0f, 0.0f,  -1.0f, -1.0f, -1.0f, // Crvena
     //     0.5f, -0.5f, -0.5f,   0.0f, 1.0f, 0.0f,  1.0f, -1.0f, -1.0f,// Zelena
     //     0.5f,  0.5f, -0.5f,   0.0f, 0.0f, 1.0f,  1.0f, 1.0f, -1.0f,// Plava
-    //    -0.5f,  0.5f, -0.5f,   1.0f, 1.0f, 0.0f,  -1.0f, 1.0f, -1.0f, // Žuta
+    //    -0.5f,  0.5f, -0.5f,   1.0f, 1.0f, 0.0f,  -1.0f, 1.0f, -1.0f, // Yuta
 
     //    // Prednja strana
-    //    -0.5f, -0.5f,  0.5f,   0.5f, 0.0f, 0.5f,  -1.0f,- 1.0f, 1.0f,// Ljubičasta
+    //    -0.5f, -0.5f,  0.5f,   0.5f, 0.0f, 0.5f,  -1.0f,- 1.0f, 1.0f,// 
     //     0.5f, -0.5f,  0.5f,   0.0f, 1.0f, 1.0f,  1.0f,- 1.0f, 1.0f,// Cijan
-    //     0.5f,  0.5f,  0.5f,   1.0f, 0.5f, 0.0f,  1.0f, 1.0f, 1.0f,// Narandžasta
+    //     0.5f,  0.5f,  0.5f,   1.0f, 0.5f, 0.0f,  1.0f, 1.0f, 1.0f,// 
     //    -0.5f,  0.5f,  0.5f,   0.5f, 1.0f, 0.5f,  -1.0f, 1.0f, 1.0f,// Svetlo zelena
     //};
     //float vertices3d[] = {
@@ -380,56 +380,63 @@ int main(void)
          // Donji levi ugao
         0.5f,  0.5f, -0.5f,   1.0f, 1.0f,   -1.0f,  1.0f, -1.0f,
          0.5f, -0.5f, -0.5f,   1.0f, 0.0f,   -1.0f, -1.0f, -1.0f, // Donji desni ugao
+                  -0.5f, -0.5f, -0.5f,   0.0f, 0.0f,   -1.0f, -1.0f, -1.0f,
           // Gornji desni ugao
-         -0.5f, -0.5f, -0.5f,   0.0f, 0.0f,   -1.0f, -1.0f, -1.0f,
-        //-0.5f, -0.5f, -0.5f,   0.0f, 0.0f,   -1.0f, -1.0f, -1.0f, // Donji levi ugao
-        // 0.5f,  0.5f, -0.5f,   1.0f, 1.0f,   -1.0f,  1.0f, -1.0f, // Gornji desni ugao
-        //-0.5f,  0.5f, -0.5f,   0.0f, 1.0f,   -1.0f,  1.0f, -1.0f, // Gornji levi ugao
 
+ // Donji levi ugao
+                -0.5f,  0.5f, -0.5f,   0.0f, 1.0f,   -1.0f,  1.0f, -1.0f,
+         0.5f,  0.5f, -0.5f,   1.0f, 1.0f,   -1.0f,  1.0f, -1.0f, // Gornji desni ugao
+ // Gornji levi ugao
+                -0.5f, -0.5f, -0.5f,   0.0f, 0.0f,   -1.0f, -1.0f, -1.0f,
         // Prednja strana (normala: +Z)
-        //-0.5f, -0.5f,  0.5f,   0.0f, 0.0f,    1.0f, -1.0f,  1.0f, // Donji levi ugao
-        // 0.5f, -0.5f,  0.5f,   1.0f, 0.0f,    1.0f, -1.0f,  1.0f, // Donji desni ugao
-        // 0.5f,  0.5f,  0.5f,   1.0f, 1.0f,    1.0f,  1.0f,  1.0f, // Gornji desni ugao
+        -0.5f, -0.5f,  0.5f,   0.0f, 0.0f,    1.0f, -1.0f,  1.0f, // Donji levi ugao
+         0.5f, -0.5f,  0.5f,   1.0f, 0.0f,    1.0f, -1.0f,  1.0f, // Donji desni ugao
+         0.5f,  0.5f,  0.5f,   1.0f, 1.0f,    1.0f,  1.0f,  1.0f, // Gornji desni ugao
 
-        //-0.5f, -0.5f,  0.5f,   0.0f, 0.0f,    1.0f, -1.0f,  1.0f, // Donji levi ugao
-        // 0.5f,  0.5f,  0.5f,   1.0f, 1.0f,    1.0f,  1.0f,  1.0f, // Gornji desni ugao
-        //-0.5f,  0.5f,  0.5f,   0.0f, 1.0f,    1.0f,  1.0f,  1.0f, // Gornji levi ugao
+        -0.5f, -0.5f,  0.5f,   0.0f, 0.0f,    1.0f, -1.0f,  1.0f, // Donji levi ugao
+         0.5f,  0.5f,  0.5f,   1.0f, 1.0f,    1.0f,  1.0f,  1.0f, // Gornji desni ugao
+        -0.5f,  0.5f,  0.5f,   0.0f, 1.0f,    1.0f,  1.0f,  1.0f, // Gornji levi ugao
 
         //// Leva strana (normala: -X)
-        //-0.5f, -0.5f, -0.5f,   0.0f, 0.0f,   -1.0f, -1.0f, -1.0f, // Donji levi ugao
-        //-0.5f, -0.5f,  0.5f,   1.0f, 0.0f,   -1.0f, -1.0f,  1.0f, // Donji desni ugao
-        //-0.5f,  0.5f,  0.5f,   1.0f, 1.0f,   -1.0f,  1.0f,  1.0f, // Gornji desni ugao
+        -0.5f, -0.5f, -0.5f,   0.0f, 0.0f,   -1.0f, -1.0f, -1.0f, // Donji levi ugao
+        -0.5f, -0.5f,  0.5f,   1.0f, 0.0f,   -1.0f, -1.0f,  1.0f, // Donji desni ugao
+        -0.5f,  0.5f,  0.5f,   1.0f, 1.0f,   -1.0f,  1.0f,  1.0f, // Gornji desni ugao
 
-        //-0.5f, -0.5f, -0.5f,   0.0f, 0.0f,   -1.0f, -1.0f, -1.0f, // Donji levi ugao
-        //-0.5f,  0.5f,  0.5f,   1.0f, 1.0f,   -1.0f,  1.0f,  1.0f, // Gornji desni ugao
-        //-0.5f,  0.5f, -0.5f,   0.0f, 1.0f,   -1.0f,  1.0f, -1.0f, // Gornji levi ugao
+        -0.5f, -0.5f, -0.5f,   0.0f, 0.0f,   -1.0f, -1.0f, -1.0f, // Donji levi ugao
+        -0.5f,  0.5f,  0.5f,   1.0f, 1.0f,   -1.0f,  1.0f,  1.0f, // Gornji desni ugao
+        -0.5f,  0.5f, -0.5f,   0.0f, 1.0f,   -1.0f,  1.0f, -1.0f, // Gornji levi ugao
 
         // Desna strana (normala: +X)
-         //0.5f, -0.5f, -0.5f,   0.0f, 0.0f,    1.0f, -1.0f, -1.0f, // Donji levi ugao
-         //0.5f, -0.5f,  0.5f,   1.0f, 0.0f,    1.0f, -1.0f,  1.0f, // Donji desni ugao
-         //0.5f,  0.5f,  0.5f,   1.0f, 1.0f,    1.0f,  1.0f,  1.0f, // Gornji desni ugao
+         0.5f,  0.5f,  0.5f,   1.0f, 1.0f,    1.0f,  1.0f,  1.0f, // Gornji desni ugao
+         0.5f, -0.5f,  0.5f,   1.0f, 0.0f,    1.0f, -1.0f,  1.0f, // Donji desni ugao
+         0.5f, -0.5f, -0.5f,   0.0f, 0.0f,    1.0f, -1.0f, -1.0f, // Donji levi ugao
 
-         //0.5f, -0.5f, -0.5f,   0.0f, 0.0f,    1.0f, -1.0f, -1.0f, // Donji levi ugao
-         //0.5f,  0.5f,  0.5f,   1.0f, 1.0f,    1.0f,  1.0f,  1.0f, // Gornji desni ugao
-         //0.5f,  0.5f, -0.5f,   0.0f, 1.0f,    1.0f,  1.0f, -1.0f, // Gornji levi ugao
+         0.5f,  0.5f, -0.5f,   0.0f, 1.0f,    1.0f,  1.0f, -1.0f, // Gornji levi ugao
+         0.5f,  0.5f,  0.5f,   1.0f, 1.0f,    1.0f,  1.0f,  1.0f, // Gornji desni ugao
+         0.5f, -0.5f, -0.5f,   0.0f, 0.0f,    1.0f, -1.0f, -1.0f, // Donji levi ugao
+
 
          //// Donja strana (normala: -Y)
-         //-0.5f, -0.5f, -0.5f,   0.0f, 0.0f,   -1.0f, -1.0f, -1.0f, // Donji levi ugao
-         // 0.5f, -0.5f, -0.5f,   1.0f, 0.0f,    1.0f, -1.0f, -1.0f, // Donji desni ugao
-         // 0.5f, -0.5f,  0.5f,   1.0f, 1.0f,    1.0f, -1.0f,  1.0f, // Gornji desni ugao
+         // 
+         -0.5f, -0.5f, -0.5f,   0.0f, 0.0f,   -1.0f, -1.0f, -1.0f, // Donji levi ugao
+          0.5f, -0.5f, -0.5f,   1.0f, 0.0f,    1.0f, -1.0f, -1.0f, // Donji desni ugao
+          0.5f, -0.5f,  0.5f,   1.0f, 1.0f,    1.0f, -1.0f,  1.0f, // Gornji desni ugao
 
-         //-0.5f, -0.5f, -0.5f,   0.0f, 0.0f,   -1.0f, -1.0f, -1.0f, // Donji levi ugao
-         // 0.5f, -0.5f,  0.5f,   1.0f, 1.0f,    1.0f, -1.0f,  1.0f, // Gornji desni ugao
-         //-0.5f, -0.5f,  0.5f,   0.0f, 1.0f,   -1.0f, -1.0f,  1.0f, // Gornji levi ugao
+         -0.5f, -0.5f, -0.5f,   0.0f, 0.0f,   -1.0f, -1.0f, -1.0f, // Donji levi ugao
+         0.5f, -0.5f,  0.5f,   1.0f, 1.0f,    1.0f, -1.0f,  1.0f, // Gornji desni ugao
+         -0.5f, -0.5f,  0.5f,   0.0f, 1.0f,   -1.0f, -1.0f,  1.0f, // Gornji levi ugao
 
          //// Gornja strana (normala: +Y)
-         //-0.5f,  0.5f, -0.5f,   0.0f, 0.0f,   -1.0f,  1.0f, -1.0f, // Donji levi ugao
-         // 0.5f,  0.5f, -0.5f,   1.0f, 0.0f,    1.0f,  1.0f, -1.0f, // Donji desni ugao
-         // 0.5f,  0.5f,  0.5f,   1.0f, 1.0f,    1.0f,  1.0f,  1.0f, // Gornji desni ugao
+ // Donji levi ugao
+                0.5f,  0.5f,  0.5f,   1.0f, 1.0f,    1.0f,  1.0f,  1.0f,
+         0.5f,  0.5f, -0.5f,   1.0f, 0.0f,    1.0f,  1.0f, -1.0f, // Donji desni ugao
+  // Gornji desni ugao
+                  -0.5f,  0.5f, -0.5f,   0.0f, 0.0f,   -1.0f,  1.0f, -1.0f,
+                           -0.5f,  0.5f,  0.5f,   0.0f, 1.0f,   -1.0f,  1.0f,  1.0f,  // Gornji levi ugao
 
-         //-0.5f,  0.5f, -0.5f,   0.0f, 0.0f,   -1.0f,  1.0f, -1.0f, // Donji levi ugao
-         // 0.5f,  0.5f,  0.5f,   1.0f, 1.0f,    1.0f,  1.0f,  1.0f, // Gornji desni ugao
-         //-0.5f,  0.5f,  0.5f,   0.0f, 1.0f,   -1.0f,  1.0f,  1.0f  // Gornji levi ugao
+          0.5f,  0.5f,  0.5f,   1.0f, 1.0f,    1.0f,  1.0f,  1.0f, // Gornji desni ugao
+                 -0.5f,  0.5f, -0.5f,   0.0f, 0.0f,   -1.0f,  1.0f, -1.0f, // Donji levi ugao
+
     };
 
     unsigned int indices3d[] = {
@@ -477,10 +484,10 @@ int main(void)
     //tlo
     float groundVertices[] = {
         // Pozicije           // Teksturne koordinate
-        -50.0f, -5.0f, -50.0f,  0.0f, 0.0f,  0.0f, 1.0f, 0.0f,// Levo dole
-         50.0f, -5.0f, -50.0f,  1.0f, 0.0f, 0.0f, 1.0f, 0.0f,// Desno dole
-         50.0f, -5.0f,  50.0f,  1.0f, 1.0f,  0.0f, 1.0f, 0.0f,// Desno gore
-        -50.0f, -5.0f,  50.0f,  0.0f, 1.0f,  0.0f, 1.0f, 0.0f,// Levo gore
+        -50.0f, -5.0f, -50.0f,  0.0f, 0.0f,  -1.0f, 1.0f, -1.0f,// Levo dole
+         50.0f, -5.0f, -50.0f,  1.0f, 0.0f, 1.0f, 1.0f, -1.0f,// Desno dole
+         50.0f, -5.0f,  50.0f,  1.0f, 1.0f,  1.0f, 1.0f, 1.0f,// Desno gore
+        -50.0f, -5.0f,  50.0f,  0.0f, 1.0f,  -1.0f, 1.0f, 1.0f,// Levo gore
     };
 
     unsigned int groundIndices[] = {
@@ -557,28 +564,6 @@ int main(void)
     // Unbind VAO
     glBindVertexArray(0);
 
-    //model koji se krece sa kamerom
-    //unsigned int vaotest, vbotest, ebotest;
-    //glGenVertexArrays(1, &vaotest);
-    //glGenBuffers(1, &vbotest);
-    //glGenBuffers(1, &ebotest);
-    //glBindVertexArray(vaotest);
-    //glBindBuffer(GL_ARRAY_BUFFER, vbotest);
-    //glBufferData(GL_ARRAY_BUFFER, sizeof(vertices3d), vertices3d, GL_STATIC_DRAW);
-
-    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebotest);
-    //glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices3d), indices3d, GL_STATIC_DRAW);
-
-    //// Pretpostavljam da su tvoji podaci u vertices3d slični, pa samo treba da postaviš atribute:
-    //glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
-    //glEnableVertexAttribArray(0);
-    //glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
-    //glEnableVertexAttribArray(1);
-    //glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(6 * sizeof(float)));
-    //glEnableVertexAttribArray(2);
-
-    //glBindVertexArray(0);
-
 
 
 
@@ -620,7 +605,7 @@ int main(void)
         //int modelLoc = glGetUniformLocation(triDTest, "model");
         //int viewLoc = glGetUniformLocation(triDTest, "view");
 
-        //glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));  // Model matrica (identična za kocku)
+        //glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));  // Model matrica (identicna za kocku)
         //glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));  // Postavljamo view matricu
         //glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));  // Postavljamo projekciju
 

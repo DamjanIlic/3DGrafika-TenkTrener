@@ -1,8 +1,8 @@
 ﻿  main.cpp
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(820,64): warning C4305: 'argument': truncation from 'double' to 'float'
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(820,58): warning C4305: 'argument': truncation from 'double' to 'float'
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(820,49): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(817,38): warning C4101: 'bulletCillinderVBO': unreferenced local variable
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(817,18): warning C4101: 'bulletCillinderVAO': unreferenced local variable
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(828,18): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(827,64): warning C4305: 'argument': truncation from 'double' to 'float'
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(827,58): warning C4305: 'argument': truncation from 'double' to 'float'
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(827,49): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(824,38): warning C4101: 'bulletCillinderVBO': unreferenced local variable
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(824,18): warning C4101: 'bulletCillinderVAO': unreferenced local variable
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(835,18): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
   Sablon.vcxproj -> D:\Faks\Grafika\3D projekat\Teksture\x64\Debug\Sablon.exe
