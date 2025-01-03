@@ -48,6 +48,8 @@
     <None Include="panorama.vert" />
     <None Include="kocka3dtest.vert" />
     <None Include="kocka3dtest.frag" />
+    <None Include="tankShader.vert" />
+    <None Include="tankShader.frag" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">

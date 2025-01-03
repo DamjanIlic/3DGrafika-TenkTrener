@@ -244,7 +244,11 @@ float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
 
-
+//SVETLOST
+//Svetlost
+glm::vec3 lightPos0(0.0f, 25.0f, 0.0f);
+glm::vec3 moonLightPos(0.0f, 25.0f, 0.0f);
+glm::vec3 lightBulbLightPos(0.0f, 3.45f, 0.6f);
 
 //////////////////targets
 
@@ -270,9 +274,17 @@ void initObjects();
 
 //PECURKA
 unsigned int VAOPecurka, VBOPecurka;
-const float PECURKA_SCALE = 1.0f;
+const float PECURKA_SCALE = 0.1f;
 void initPecurka();
 
+//TENK
+unsigned int VAOTank, VBOTank;
+vector<float> tankVertices;
+const float TANK_SCALE = 1.0f;
+void initTank();
+void drawTank(int tankShader, unsigned tankTexture);
+//1 za on, 0 off
+int isLightOn = 1;
 
 
 
@@ -346,12 +358,13 @@ int main(void)
     unsigned aimG = loadImageToTexture("res/aim.png");
     unsigned dottedG = loadImageToTexture("res/dotted.png");
     unsigned xboxG = loadImageToTexture("res/box.png");
+    unsigned tankG = loadImageToTexture("res/box.png");
     // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ SEJDERI ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
     unsigned int unifiedShader = createShader("basic.vert", "basic.frag");
     unsigned int lightBulbShader = createShader("lightBulb.vert", "lightBulb.frag");
     unsigned int panoramaShader = createShader("panorama.vert", "panorama.frag");
-
+    unsigned int tankShader = createShader("tankShader.vert", "tankShader.frag");
 
     //3d
     unsigned int triDTest = createShader("kocka3dtest.vert", "kocka3dtest.frag");
@@ -485,7 +498,7 @@ int main(void)
 
 
     glm::vec3 cubePositions[] = {
-        glm::vec3(0.0f,  50.0f,  0.0f),
+        glm::vec3(0.0f,  3.45f,  0.6f),
         glm::vec3(6.0f,  0.0f, 0.0f),
         glm::vec3(-7.5f, -2.2f, -2.5f),
         glm::vec3(-3.8f, -2.0f, -12.3f),
@@ -585,8 +598,7 @@ int main(void)
 
 
 
-    //Svetlost
-    glm::vec3 lightPos0(0.0f, 25.0f, 0.0f);
+    //postavi svetlost na pecurke
     glUseProgram(triDTest);
 
     glUniform3fv(glGetUniformLocation(triDTest, "lightPos0"), 1, glm::value_ptr(lightPos0));
@@ -686,6 +698,12 @@ int main(void)
         glBindVertexArray(groundVAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
+
+        //glBindVertexArray(VAOTank);
+        //glDrawArrays(GL_TRIANGLES,0,  tankVertices.size() / 8);
+        //glBindVertexArray(0);
+
+        drawTank(tankShader, textureID);
 
 
       /*  glBindVertexArray(vaotest);
@@ -1019,6 +1037,7 @@ void drawNeedle(float x1, float x2, float y1, float y2, int shaderProgram, float
 //                                                                                  INPUTI 
 void processInput(GLFWwindow* window)
 {
+    static bool isKeyPressed = false;
     //ugasi na escape
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
@@ -1034,6 +1053,23 @@ void processInput(GLFWwindow* window)
         camera.ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.ProcessKeyboard(RIGHT, deltaTime);
+
+
+    //svetlo paljenje/gasenje
+    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) {
+        if (!isKeyPressed) {
+            if (isLightOn == 1) {
+                isLightOn = 0;
+            }
+            else {
+                isLightOn = 1;
+            }
+            isKeyPressed = true;
+        }
+    }
+    else {
+        isKeyPressed = false;
+    }
 }
 
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
@@ -1157,6 +1193,7 @@ void loadObject(const string& filePath, vector<float>&output, float objectScale)
 
 void initObjects() {
     initPecurka();
+    initTank();
 }
 
 void initPecurka() {
@@ -1183,4 +1220,74 @@ void initPecurka() {
 
     // Unbind VAO
     glBindVertexArray(0);
+}
+
+void initTank() {
+    loadObject("res/tenk3.obj", tankVertices, TANK_SCALE*5.0f);
+    glGenVertexArrays(1, &VAOTank);
+    glGenBuffers(1, &VBOTank);
+
+    // Bind VAO
+    glBindVertexArray(VAOTank);
+
+    // Bind VBO
+    glBindBuffer(GL_ARRAY_BUFFER, VBOTank);
+    glBufferData(GL_ARRAY_BUFFER, tankVertices.size() * sizeof(float), tankVertices.data(), GL_STATIC_DRAW);
+
+
+    // Podesite atribute vrhova
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0); // Pozicije
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float))); // Teksture
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float))); // Normale
+    glEnableVertexAttribArray(2);
+
+    // Unbind VAO
+    glBindVertexArray(0);
+
+}
+
+void drawTank(int tankShader, unsigned tankTexture) {
+    glUseProgram(tankShader);
+    //postavljanje svetlosnih vektora
+    glUniform3fv(glGetUniformLocation(tankShader, "moonLightPos"), 1, glm::value_ptr(moonLightPos));
+    glUniform3fv(glGetUniformLocation(tankShader, "lightBulbLightPos"), 1, glm::value_ptr(moonLightPos));
+
+    //da li je sijalica ukljucena
+    glUniform1i(glGetUniformLocation(tankShader, "isLightOn"), isLightOn);
+
+    //projekcione matrice
+    int projLoc = glGetUniformLocation(tankShader, "projection");
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+    glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+
+    // camera/view transformation
+    int viewLoc = glGetUniformLocation(tankShader, "view");
+    glm::mat4 view = camera.GetViewMatrix();
+    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+    
+    int modelLoc = glGetUniformLocation(tankShader, "model");
+    glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+    model = glm::rotate(model, glm::radians(0.0f), glm::vec3(1.0f, 0.3f, 0.5f));
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+    
+    // render boxes
+    
+
+    //textura
+    glBindVertexArray(VAOTank);
+    glActiveTexture(GL_TEXTURE0);
+
+    //glBindTexture(GL_TEXTURE_2D, xboxG);
+    glBindTexture(GL_TEXTURE_2D, tankTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);  // Ili GL_NEAREST
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    //glBindTexture(GL_TEXTURE_2D, 0);
+    glUniform1i(glGetUniformLocation(tankShader, "uTex"), 0);
+
+    glBindVertexArray(VAOTank);
+    glDrawArrays(GL_TRIANGLES, 0, tankVertices.size() / 8);
+    glBindVertexArray(0);
+    glUseProgram(0);
 }

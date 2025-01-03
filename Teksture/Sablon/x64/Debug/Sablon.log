@@ -1,9 +1,10 @@
 ﻿  main.cpp
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(677,59): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(822,64): warning C4305: 'argument': truncation from 'double' to 'float'
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(822,58): warning C4305: 'argument': truncation from 'double' to 'float'
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(822,49): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(819,38): warning C4101: 'bulletCillinderVBO': unreferenced local variable
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(819,18): warning C4101: 'bulletCillinderVAO': unreferenced local variable
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(830,18): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(689,59): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(840,64): warning C4305: 'argument': truncation from 'double' to 'float'
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(840,58): warning C4305: 'argument': truncation from 'double' to 'float'
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(840,49): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(837,38): warning C4101: 'bulletCillinderVBO': unreferenced local variable
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(837,18): warning C4101: 'bulletCillinderVAO': unreferenced local variable
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(848,18): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(1290,55): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
   Sablon.vcxproj -> D:\Faks\Grafika\3D projekat\Teksture\x64\Debug\Sablon.exe
