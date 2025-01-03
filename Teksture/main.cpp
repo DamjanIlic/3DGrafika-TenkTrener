@@ -8,6 +8,8 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <string>
+#include <algorithm>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -237,6 +239,7 @@ float lastFrame = 0.0f;
 //Kamera
 // camera
 Camera camera(glm::vec3(cameraPosX, cameraPosY, cameraPosZ));
+//inicijalno na sredini ekrana
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -259,6 +262,16 @@ void initRectangle();
 
 void drawRectangle(float x1, float x2, float y1, float y2, int shaderProgram, float shaderValue);
 //void drawTexture(float x1, float x2, float y1, float y2, int shaderProgram, GLuint textureID, float shaderValue);
+
+
+//                                                  OBJEKTI INIT
+void loadObject(const string& filePath, vector<float>&outputVertices, float objectScale);
+void initObjects();
+
+//PECURKA
+unsigned int VAOPecurka, VBOPecurka;
+const float PECURKA_SCALE = 1.0f;
+void initPecurka();
 
 
 
@@ -373,7 +386,7 @@ int main(void)
     //    -0.5f,  0.5f,  0.5f,   0.0f, 1.0f,        -1.0f,  1.0f,  1.0f,
     //};
     
-    float vertices3d[] = {
+    vector<float> vertices3d = {
         // Koordinate (x, y, z)      // Tekstura (u, v)   // Normale (nx, ny, nz)
 
         // Zadnja strana (normala: -Z) - kvadrat podeljen na dva trougla
@@ -438,6 +451,9 @@ int main(void)
                  -0.5f,  0.5f, -0.5f,   0.0f, 0.0f,   -1.0f,  1.0f, -1.0f, // Donji levi ugao
 
     };
+    vector<float> pecurka3d;
+    loadObject("res/PECURKA.obj", pecurka3d, PECURKA_SCALE);
+    vertices3d = pecurka3d;
 
     unsigned int indices3d[] = {
         // Zadnja strana
@@ -551,7 +567,8 @@ int main(void)
 
     // Bind VBO
     glBindBuffer(GL_ARRAY_BUFFER, VBO3d);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices3d), vertices3d, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, pecurka3d.size() * sizeof(float), pecurka3d.data(), GL_STATIC_DRAW);
+
 
     // Podesite atribute vrhova
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0); // Pozicije
@@ -563,7 +580,7 @@ int main(void)
 
     // Unbind VAO
     glBindVertexArray(0);
-
+    initObjects();
 
 
 
@@ -630,7 +647,7 @@ int main(void)
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
         // render boxes
         //textura
-        glBindVertexArray(VAO3d);
+        glBindVertexArray(VAOPecurka);
         glActiveTexture(GL_TEXTURE0);
 
         //glBindTexture(GL_TEXTURE_2D, xboxG);
@@ -657,7 +674,7 @@ int main(void)
             //model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
             
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-            glDrawArrays(GL_TRIANGLES, 0, 36);
+            glDrawArrays(GL_TRIANGLES, 0, pecurka3d.size()/8);
             //glDrawElements(GL_TRIANGLES, sizeof(indices3d) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
             //glDrawArrays(GL_TRIANGLES, 0, 36);
         }
@@ -999,7 +1016,7 @@ void drawNeedle(float x1, float x2, float y1, float y2, int shaderProgram, float
 
 
 //3d 
-//inputi 
+//                                                                                  INPUTI 
 void processInput(GLFWwindow* window)
 {
     //ugasi na escape
@@ -1038,4 +1055,132 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
     lastY = ypos;
 
     camera.ProcessMouseMovement(xoffset, yoffset);
+}
+
+
+
+
+
+
+
+//                                                                                  OBJEKTI
+//loaduje objekat iz .obj fajla, popuni prosledjeni vektor sa vertices x,y,z, v, u, xn, yn, zn (koordinate, tekstura, normala)
+//objectScale velicina objekta , xyz*objectScale/10
+void loadObject(const string& filePath, vector<float>&output, float objectScale) {
+    std::vector<float> vertexData; //  sve verteks koordinate
+    std::vector<float> textureData; //  sve teksturne koordinate
+    std::vector<float> normalData; //  sve normale
+    std::vector<int> faceVertexIndices; // Indeksi verteksa za svaki face
+    std::vector<int> faceTextureIndices; // Indeksi tekstura za svaki face
+    std::vector<int> faceNormalIndices; // Indeksi normala za svaki face
+    //f: 1/1/1
+    std::ifstream file(filePath);
+    if (!file.is_open()) {
+        std::cerr << "Unable to open file: " << filePath << std::endl;
+        return;
+    }
+
+    std::string line;
+    while (std::getline(file, line)) {
+        std::istringstream lineStream(line);
+        std::string prefix;
+        lineStream >> prefix;
+       // cout << line << endl;
+        if (prefix == "v") {
+            // Verteksi
+            float x, y, z;
+            lineStream >> x >> y >> z;
+            vertexData.push_back(x* (objectScale / 10.0f));
+            vertexData.push_back(y* (objectScale / 10.0f));
+            vertexData.push_back(z* (objectScale / 10.0f));
+        }
+        else if (prefix == "vt") {
+            // Teksturne koordinate
+            float u, v;
+            lineStream >> u >> v;
+            textureData.push_back(u);
+            textureData.push_back(v);
+        }
+        else if (prefix == "vn") {
+            // Normale
+            float nx, ny, nz;
+            lineStream >> nx >> ny >> nz;
+            normalData.push_back(nx);
+            normalData.push_back(ny);
+            normalData.push_back(nz);
+        }
+        else if (prefix == "f") {
+            // Face (poligoni)
+            for (int i = 0; i < 3; ++i) {
+                std::string vertexInfo;
+                lineStream >> vertexInfo;
+                //f: 1/1/1 2/2/2 1/2/3
+                // Parsiraj v/vt/vn
+                std::replace(vertexInfo.begin(), vertexInfo.end(), '/', ' ');
+                std::istringstream vertexStream(vertexInfo);
+
+                int vIndex, tIndex, nIndex;
+                vertexStream >> vIndex >> tIndex >> nIndex;
+
+                // Pretvaranje iz 1-based u 0-based indekse
+                faceVertexIndices.push_back(vIndex - 1);
+                faceTextureIndices.push_back(tIndex - 1);
+                faceNormalIndices.push_back(nIndex - 1);
+            }
+        }
+    }
+    file.close();
+
+    // Kreiranje izlaznog niza
+    for (size_t i = 0; i < faceVertexIndices.size(); ++i) {
+        int vIndex = faceVertexIndices[i];
+        int tIndex = faceTextureIndices[i];
+        int nIndex = faceNormalIndices[i];
+
+        // Dodaj verteks koordinate
+        //1, 2, 3
+        output.push_back(vertexData[vIndex * 3]);
+        output.push_back(vertexData[vIndex * 3 + 1]);
+        output.push_back(vertexData[vIndex * 3 + 2]);
+
+        // Dodaj teksturne koordinate
+        output.push_back(textureData[tIndex * 2]);
+        output.push_back(textureData[tIndex * 2 + 1]);
+
+        // Dodaj normale
+        output.push_back(normalData[nIndex * 3]);
+        output.push_back(normalData[nIndex * 3 + 1]);
+        output.push_back(normalData[nIndex * 3 + 2]);
+    }
+    //cout << output.size() / 8;
+}
+
+void initObjects() {
+    initPecurka();
+}
+
+void initPecurka() {
+    vector<float> pecurka3d;
+    loadObject("res/PECURKA.obj", pecurka3d, PECURKA_SCALE);
+    glGenVertexArrays(1, &VAOPecurka);
+    glGenBuffers(1, &VBOPecurka);
+
+    // Bind VAO
+    glBindVertexArray(VAOPecurka);
+
+    // Bind VBO
+    glBindBuffer(GL_ARRAY_BUFFER, VBOPecurka);
+    glBufferData(GL_ARRAY_BUFFER, pecurka3d.size() * sizeof(float), pecurka3d.data(), GL_STATIC_DRAW);
+
+
+    // Podesite atribute vrhova
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0); // Pozicije
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float))); // Teksture
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float))); // Normale
+    glEnableVertexAttribArray(2);
+
+    // Unbind VAO
+    glBindVertexArray(0);
 }
