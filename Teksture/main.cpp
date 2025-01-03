@@ -35,7 +35,7 @@ unsigned int compileShader(GLenum type, const char* source);
 unsigned int createShader(const char* vsSource, const char* fsSource);
 static unsigned loadImageToTexture(const char* filePath); //Ucitavanje teksture, izdvojeno u funkciju
 
-void drawBullet(unsigned int shaderProgram, unsigned int bullet);
+//void drawBullet(unsigned int shaderProgram, unsigned int bullet);
 void drawNeedle(float x1, float x2, float y1, float y2, int shaderProgram, float shaderValue, float angleDegrees);
 
 void shootBullet(unsigned int shaderProgram);
@@ -250,6 +250,10 @@ glm::vec3 lightPos0(0.0f, 25.0f, 0.0f);
 glm::vec3 moonLightPos(0.0f, 25.0f, 0.0f);
 glm::vec3 lightBulbLightPos(0.0f, 3.45f, 0.6f);
 
+
+float angle = 0.0f;
+
+
 //////////////////targets
 
 float randBetween(float min, float max) {
@@ -274,7 +278,7 @@ void initObjects();
 
 //PECURKA
 unsigned int VAOPecurka, VBOPecurka;
-const float PECURKA_SCALE = 0.1f;
+const float PECURKA_SCALE = 1.5f;
 void initPecurka();
 
 //TENK
@@ -285,6 +289,28 @@ void initTank();
 void drawTank(int tankShader, unsigned tankTexture);
 //1 za on, 0 off
 int isLightOn = 1;
+
+//METAK
+unsigned int VAOBullet, VBOBullet;
+vector<float> bulletVertices;
+const float BULLET_SCALE = 4.5f;
+void initBullet();
+void drawBullet(int bulletShader, unsigned bulletTexture);
+glm::vec3 bulletPositions[] = {
+    //uspravni
+    glm::vec3(-3.05f,  -0.95f,  -1.1f),
+    glm::vec3(3.05f,  -0.95f, -1.1f),
+    //levo
+    glm::vec3(-3.0f, 0.425f, 2.3f),
+    glm::vec3(-3.0f, 1.1f, 2.3f),
+    glm::vec3(-3.0f, 1.775f,2.3f),
+    glm::vec3(-3.0f, 2.45f, 2.3f),
+    //desno
+    glm::vec3(3.0f, 0.425f, 2.3f),
+    glm::vec3(3.0f, 1.1f, 2.3f),
+    glm::vec3(3.0f, 1.775f,2.3f),
+    glm::vec3(3.0f, 2.45f, 2.3f),
+};
 
 
 
@@ -382,7 +408,7 @@ int main(void)
     //    -0.5f, -0.5f,  0.5f,   0.5f, 0.0f, 0.5f,  -1.0f,- 1.0f, 1.0f,// 
     //     0.5f, -0.5f,  0.5f,   0.0f, 1.0f, 1.0f,  1.0f,- 1.0f, 1.0f,// Cijan
     //     0.5f,  0.5f,  0.5f,   1.0f, 0.5f, 0.0f,  1.0f, 1.0f, 1.0f,// 
-    //    -0.5f,  0.5f,  0.5f,   0.5f, 1.0f, 0.5f,  -1.0f, 1.0f, 1.0f,// Svetlo zelena
+    //    -0.5f,  0.5f,  0.5f,   0.5f, 1.0f, 0.5f,  -1.0f, 1.0f, 1.0f,//
     //};
     //float vertices3d[] = {
     //    // Koordinate        // Tekstura (u, v)     // Normale
@@ -499,7 +525,7 @@ int main(void)
 
     glm::vec3 cubePositions[] = {
         glm::vec3(0.0f,  3.45f,  0.6f),
-        glm::vec3(6.0f,  0.0f, 0.0f),
+        glm::vec3(0.0f,  0.0f, 0.0f),
         glm::vec3(-7.5f, -2.2f, -2.5f),
         glm::vec3(-3.8f, -2.0f, -12.3f),
         glm::vec3(12.4f, -0.4f, -3.5f),
@@ -509,6 +535,9 @@ int main(void)
         glm::vec3(5.5f,  15.0f, -2.5f),
         glm::vec3(5.5f,  5.5f -1.0f, 5.5f)
     };
+
+    float cupolaAngle = 0.0f; // Ugao rotacije u stepenima
+    float alpha = glm::radians(cupolaAngle); // Pretvaranje u radijane
 
     //tlo
     float groundVertices[] = {
@@ -611,6 +640,7 @@ int main(void)
         std::cout << "Tekstura ucitana uspesno!" << std::endl;
     }
 
+
     // ++++++++++++++++++++++++++++++++++++++++++++++++++++++ RENDER PETLJA ++++++++++++++++++++++++++++++++++++++++++++++++++++++
     while (!glfwWindowShouldClose(window)) {
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -654,7 +684,14 @@ int main(void)
 
         // camera/view transformation
         int viewLoc = glGetUniformLocation(triDTest, "view");
+
+
+
+
         glm::mat4 view = camera.GetViewMatrix();
+
+
+
         //ourShader.setMat4("view", view);
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
         // render boxes
@@ -674,6 +711,24 @@ int main(void)
 
 
         int modelLoc = glGetUniformLocation(triDTest, "model");
+
+
+        std::vector<glm::vec3> cubePositionsNew;
+
+        cupolaAngle += 0.315f;
+        //alpha = glm::radians(cupolaAngle);
+        //for (int i = 0; i < sizeof(cubePositions) / sizeof(cubePositions[0]); ++i) {
+        //    glm::vec3 pos = cubePositions[i];
+        //    float c = glm::length(glm::vec3(pos.x, 0.0f, pos.z)); // Udaljenost od koordinatnog centra
+        //    float newX = pos.x  - c * cos(alpha);
+        //    float newZ = pos.z + c * sin(alpha);
+        //    cubePositionsNew.push_back(glm::vec3(newX, pos.y, newZ)); // Dodavanje nove pozicije
+        //}
+
+
+
+
+
         //glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
         //model = glm::rotate(model, glm::radians(0.0f), glm::vec3(1.0f, 0.3f, 0.5f));
         //glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
@@ -681,10 +736,11 @@ int main(void)
         {
             // calculate the model matrix for each object and pass it to shader before drawing
             glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+            model = glm::rotate(model, glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
+            //angle += 2.0f;
+            //model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.0f, 1.0f));
             model = glm::translate(model, cubePositions[i]);
-            float angle = 20.0f * i;
-            //model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-            
+
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
             glDrawArrays(GL_TRIANGLES, 0, pecurka3d.size()/8);
             //glDrawElements(GL_TRIANGLES, sizeof(indices3d) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
@@ -830,16 +886,16 @@ static unsigned loadImageToTexture(const char* filePath) {
         return 0;
     }
 }
-void drawBullet(unsigned int shaderProgram, unsigned int bullet) {
-    if (!shouldDrawBullet) {
-        return;
-    }
-    unsigned int bulletCillinderVAO, bulletCillinderVBO;
-    for (float i = 0; i < ammo; i++) {
-        // drawRectangle(-1.55 + i / 5, -1.45 + i / 5, -0.8, -0.6, shaderProgram, 3.0f);
-        drawtxt(shaderProgram, -1 + i / 9, -0.9 + i / 9, -0.8, -0.6, bullet);
-    }
-}
+//void drawBullet(unsigned int shaderProgram, unsigned int bullet) {
+//    if (!shouldDrawBullet) {
+//        return;
+//    }
+//    unsigned int bulletCillinderVAO, bulletCillinderVBO;
+//    for (float i = 0; i < ammo; i++) {
+//        // drawRectangle(-1.55 + i / 5, -1.45 + i / 5, -0.8, -0.6, shaderProgram, 3.0f);
+//        drawtxt(shaderProgram, -1 + i / 9, -0.9 + i / 9, -0.8, -0.6, bullet);
+//    }
+//}
 
 void shootBullet(unsigned int shaderProgram) {
 
@@ -1037,7 +1093,7 @@ void drawNeedle(float x1, float x2, float y1, float y2, int shaderProgram, float
 //                                                                                  INPUTI 
 void processInput(GLFWwindow* window)
 {
-    static bool isKeyPressed = false;
+    static bool isLPressed = false, isSpacePressed = false;
     //ugasi na escape
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
@@ -1055,21 +1111,42 @@ void processInput(GLFWwindow* window)
         camera.ProcessKeyboard(RIGHT, deltaTime);
 
 
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+        angle -= 1.0f;
+    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+        angle += 1.0f;
+
     //svetlo paljenje/gasenje
     if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) {
-        if (!isKeyPressed) {
+        if (!isLPressed) {
             if (isLightOn == 1) {
                 isLightOn = 0;
             }
             else {
                 isLightOn = 1;
             }
-            isKeyPressed = true;
+            isLPressed = true;
         }
     }
     else {
-        isKeyPressed = false;
+        isLPressed = false;
     }
+    
+    //pucanje
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+        if (!isSpacePressed) {
+            if(ammo != 0)
+                ammo--;
+            else {
+                ammo = 10;
+            }
+            isSpacePressed = true;
+        }
+    }
+    else {
+        isSpacePressed = false;
+    }
+    
 }
 
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
@@ -1194,6 +1271,7 @@ void loadObject(const string& filePath, vector<float>&output, float objectScale)
 void initObjects() {
     initPecurka();
     initTank();
+    initBullet();
 }
 
 void initPecurka() {
@@ -1252,7 +1330,7 @@ void drawTank(int tankShader, unsigned tankTexture) {
     glUseProgram(tankShader);
     //postavljanje svetlosnih vektora
     glUniform3fv(glGetUniformLocation(tankShader, "moonLightPos"), 1, glm::value_ptr(moonLightPos));
-    glUniform3fv(glGetUniformLocation(tankShader, "lightBulbLightPos"), 1, glm::value_ptr(moonLightPos));
+    glUniform3fv(glGetUniformLocation(tankShader, "lightBulbLightPos"), 1, glm::value_ptr(lightBulbLightPos));
 
     //da li je sijalica ukljucena
     glUniform1i(glGetUniformLocation(tankShader, "isLightOn"), isLightOn);
@@ -1272,7 +1350,9 @@ void drawTank(int tankShader, unsigned tankTexture) {
     model = glm::rotate(model, glm::radians(0.0f), glm::vec3(1.0f, 0.3f, 0.5f));
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
     
-    // render boxes
+    // render bullets
+
+
     
 
     //textura
@@ -1286,8 +1366,83 @@ void drawTank(int tankShader, unsigned tankTexture) {
     //glBindTexture(GL_TEXTURE_2D, 0);
     glUniform1i(glGetUniformLocation(tankShader, "uTex"), 0);
 
-    glBindVertexArray(VAOTank);
     glDrawArrays(GL_TRIANGLES, 0, tankVertices.size() / 8);
+
+    drawBullet(tankShader, tankTexture);
+
+    glBindVertexArray(0); // Unbind VAO
+    glBindBuffer(GL_ARRAY_BUFFER, 0); // Unbind VBO (ako koristite)
+    glActiveTexture(GL_TEXTURE0); // Unbind texture (ako je potrebno)
+    glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture (ako je korišćena)
+    glUseProgram(0); // Unbind program
+}
+
+
+void initBullet() {
+    loadObject("res/bulet3.obj", bulletVertices, BULLET_SCALE);
+    glGenVertexArrays(1, &VAOBullet);
+    glGenBuffers(1, &VBOBullet);
+    // Bind VAO
+    glBindVertexArray(VAOBullet);
+
+    // Bind VBO
+    glBindBuffer(GL_ARRAY_BUFFER, VBOBullet);
+    glBufferData(GL_ARRAY_BUFFER, bulletVertices.size() * sizeof(float), bulletVertices.data(), GL_STATIC_DRAW);
+
+
+    // Podesite atribute vrhova
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0); // Pozicije
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float))); // Teksture
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float))); // Normale
+    glEnableVertexAttribArray(2);
+
+    // Unbind VAO
     glBindVertexArray(0);
-    glUseProgram(0);
+
+}
+void drawBullet(int bulletShader, unsigned bulletTexture) {
+    glBindVertexArray(VAOBullet);
+    glActiveTexture(GL_TEXTURE0);
+
+    //glBindTexture(GL_TEXTURE_2D, xboxG);
+    glBindTexture(GL_TEXTURE_2D, bulletTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);  // Ili GL_NEAREST
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    //glBindTexture(GL_TEXTURE_2D, 0);
+    glUniform1i(glGetUniformLocation(bulletShader, "uTex"), 0);
+
+    glBindVertexArray(VAOBullet);
+
+    for (unsigned int i = 0; i < ammo; i++)
+    {
+        int modelLoc = glGetUniformLocation(bulletShader, "model");
+        // calculate the model matrix for each object and pass it to shader before drawing
+        glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+        model = glm::translate(model, bulletPositions[i]);
+        float angle = 0.0f;
+        if (i >= 2) {
+            angle = -90.0f;
+        }
+        else {
+            angle = 0.0f;
+        }
+        model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.0f, 0.0f));
+
+        //float angle = 20.0f * i;
+        //model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        glDrawArrays(GL_TRIANGLES, 0, bulletVertices.size() / 8);
+        //glDrawElements(GL_TRIANGLES, sizeof(indices3d) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
+        //glDrawArrays(GL_TRIANGLES, 0, 36);
+    }
+
+
+
+    glBindVertexArray(0); // Unbind VAO
+    glBindBuffer(GL_ARRAY_BUFFER, 0); // Unbind VBO (ako koristite)
+    glActiveTexture(GL_TEXTURE0); // Unbind texture (ako je potrebno)
+    glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture (ako je korišćena)
 }
