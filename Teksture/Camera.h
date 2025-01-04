@@ -110,6 +110,18 @@ public:
             Zoom = 45.0f;
     }
 
+    void AdjustZoom(float zoomLevel) {
+        if (zoomLevel == 0.0f) {
+            Zoom = 45.0f;
+        }
+        if (zoomLevel == 1.0f) {
+            Zoom = 35.0f;
+        }
+        if(zoomLevel == 2.0f) {
+            Zoom = 20.0f;
+        }
+    }
+
 private:
     // calculates the front vector from the Camera's (updated) Euler Angles
     void updateCameraVectors()

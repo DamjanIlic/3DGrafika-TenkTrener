@@ -44,6 +44,7 @@ void main() {
     } else {
         FragColor = FragColor;  // Ako je tekstura validna, samo je koristimo
     }
+
     //FragColor = vec4(chTex.y, chTex.x, chTex.y, 1.0f);
     //FragColor = (texture(uTex,chTex))* vec4(ambientLight, 1.0f) + vec4(diffuseFinal, 1.f));
     //FragColor = vec4(vs_normal, 1.0); // Display diffuse color result

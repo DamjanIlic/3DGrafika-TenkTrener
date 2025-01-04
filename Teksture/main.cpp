@@ -243,11 +243,26 @@ Camera camera(glm::vec3(cameraPosX, cameraPosY, cameraPosZ));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
+float zoomLevel = 0.0f;
+
+//pozicije kamere
+
+
+glm::vec3 scopeCameraPos(-1.55f, 3.f, -2.55f); //zoom koji gleda spolja
+bool isZoomedIn = false;
+glm::vec3 scopeInsideTankPos(-0.8f, 3.f, -0.15f);
+
+
+glm::vec3 windowCameraPos(1.55f, 3.0f, -2.20f); //prozorcic pov ??
+bool isLookingOutside = false;
+
+
+
 
 //SVETLOST
 //Svetlost
 glm::vec3 lightPos0(0.0f, 25.0f, 0.0f);
-glm::vec3 moonLightPos(0.0f, 25.0f, 0.0f);
+glm::vec3 moonLightPos(1.55f, 3.0f, -2.20f); //prozorcic tenka
 glm::vec3 lightBulbLightPos(0.0f, 3.45f, 0.6f);
 
 
@@ -715,6 +730,10 @@ int main(void)
 
         std::vector<glm::vec3> cubePositionsNew;
 
+        camera.Position.y = 3.f;
+
+        cout << camera.Position.x << " " << camera.Position.y << " " << camera.Position.z << " " << camera.Yaw <<endl;
+
         cupolaAngle += 0.315f;
         //alpha = glm::radians(cupolaAngle);
         //for (int i = 0; i < sizeof(cubePositions) / sizeof(cubePositions[0]); ++i) {
@@ -1093,30 +1112,50 @@ void drawNeedle(float x1, float x2, float y1, float y2, int shaderProgram, float
 //                                                                                  INPUTI 
 void processInput(GLFWwindow* window)
 {
-    static bool isLPressed = false, isSpacePressed = false;
+    static bool isLPressed = false, isSpacePressed = false; //svetlo/pucanje
+    static bool isXPressed = false, isZPressed = false; //scope related
+    static bool isOPressed = false;
+
     //ugasi na escape
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
     //cam related WASD movement
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        camera.ProcessKeyboard(FORWARD, deltaTime);
+    if (!isZoomedIn && !isLookingOutside) {
+        if (camera.Position.x < -2.0f) {
+            camera.Position.x = -2.0f;
+        }
+        if (camera.Position.z > 2.35f) {
+            camera.Position.z = 2.35f;
+        }
+
+
+        if (camera.Position.x > 1.93f) {
+            camera.Position.x = 1.93f;
+        }
+        if (camera.Position.z < -0.13f) {
+            camera.Position.z = -0.13f;
+        }
+
+
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+            camera.ProcessKeyboard(FORWARD, deltaTime);
+        }
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+            camera.ProcessKeyboard(BACKWARD, deltaTime);
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+            camera.ProcessKeyboard(LEFT, deltaTime);
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+            camera.ProcessKeyboard(RIGHT, deltaTime);
     }
 
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        camera.ProcessKeyboard(BACKWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        camera.ProcessKeyboard(LEFT, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        camera.ProcessKeyboard(RIGHT, deltaTime);
-
-
+    //temp rotacija
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
         angle -= 1.0f;
     if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
         angle += 1.0f;
 
-    //svetlo paljenje/gasenje
+    //svetlo paljenje/gasenje unutar tenka
     if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) {
         if (!isLPressed) {
             if (isLightOn == 1) {
@@ -1146,11 +1185,103 @@ void processInput(GLFWwindow* window)
     else {
         isSpacePressed = false;
     }
+
+    //scope
+    if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) {
+
+        if (!isZPressed) {
+            if (!isZoomedIn) {
+                if (camera.Position.x < -1.5f || camera.Position.x > 0.0f) {
+                    return;
+                }
+                if (camera.Position.z > 0.6f || camera.Position.z < -0.45f) {
+                    return;
+                }
+                camera.Position = scopeCameraPos;
+                camera.Yaw = -90.0f; // gledaj pravo
+                camera.Pitch = 0.0f;
+                camera.ProcessMouseMovement(0, 0, 0); //pravo
+            }
+            else {
+                camera.Position = scopeInsideTankPos;
+                camera.ProcessMouseMovement(-270.0f,-75.0f, 0); //zaokreni pogled ka scope
+            }
+            //camera.ProcessKeyboard(RIGHT, deltaTime);
+            //camera.ProcessKeyboard(LEFT, deltaTime);
+          //apdejtuj da gledas pravo
+            //cout << camera.Front.x;
+            isZoomedIn = !isZoomedIn;
+            isZPressed = true;
+        }
+    }
+    else {
+        isZPressed = false;
+    }
+    //zumiranje
+    if (isZoomedIn) { //is Scoped in bolje 
+        if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) {
+            if (!isXPressed) {
+                 zoomLevel += 1.0f;
+                if (zoomLevel == 3.0f)
+                    zoomLevel = 0.0f;
+                camera.AdjustZoom(zoomLevel); //0, 1, 2 x scopes
+
+                isXPressed = true;
+            }
+        }
+        else {
+            isXPressed = false;
+        }
+    }
+
+
+    //outside pov
+    if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS) {
+
+        if (!isOPressed) {
+            if (!isLookingOutside) {
+                //if (camera.Position.x < -1.5f || camera.Position.x > 0.0f) {
+                //    return;
+                //}
+                //if (camera.Position.z > 0.6f || camera.Position.z < -0.45f) {
+                //    return;
+                //}
+                if (camera.Position.x < 0.8f) {
+                    return;
+                }
+                if (camera.Position.z > 0.f) {
+                    return;
+                }
+                camera.Position = windowCameraPos;
+                camera.Yaw = -90.0f; // gledaj pravo
+                camera.Pitch = 0.0f;
+                camera.ProcessMouseMovement(0, 0, 0); //pravo
+            }
+            else {
+                //camera.Position = scopeInsideTankPos;
+                //camera.ProcessMouseMovement(-270.0f, -75.0f, 0); //zaokreni pogled ka scope
+            }
+            //camera.ProcessKeyboard(RIGHT, deltaTime);
+            //camera.ProcessKeyboard(LEFT, deltaTime);
+          //apdejtuj da gledas pravo
+            //cout << camera.Front.x;
+            isLookingOutside = !isLookingOutside;
+            isOPressed = true;
+        }
+    }
+    else {
+        isOPressed = false;
+    }
+
+
     
 }
 
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 {
+    if (isZoomedIn) {
+        return;//
+    }
     float xpos = static_cast<float>(xposIn);
     float ypos = static_cast<float>(yposIn);
 
@@ -1348,6 +1479,7 @@ void drawTank(int tankShader, unsigned tankTexture) {
     int modelLoc = glGetUniformLocation(tankShader, "model");
     glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
     model = glm::rotate(model, glm::radians(0.0f), glm::vec3(1.0f, 0.3f, 0.5f));
+    //model = glm::translate(model, camera.Position);
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
     
     // render bullets
