@@ -1,8 +1,9 @@
 ﻿  main.cpp
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(837,59): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(996,18): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(1577,55): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(1627,32): warning C4018: '<': signed/unsigned mismatch
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(1654,61): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(1704,57): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(845,59): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(1006,18): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(1636,55): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(1687,32): warning C4018: '<': signed/unsigned mismatch
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(1714,61): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(1764,57): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(1855,57): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
   Sablon.vcxproj -> D:\Faks\Grafika\3D projekat\Teksture\x64\Debug\Sablon.exe

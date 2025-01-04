@@ -397,6 +397,14 @@ glm::vec3 bulletPositions[] = {
     glm::vec3(3.0f, 2.45f, 2.3f),
 };
 
+//CEV TENKA
+unsigned int VAOCannon, VBOCannon;
+vector<float> cannonVertices;
+const float CANNON_SCALE = 5.0f;
+float cannonRotationAngle = 0.0f;
+void initCannon();
+void drawCannon(int cannonShader, unsigned cannonTexture);
+
 
 
 
@@ -803,7 +811,7 @@ int main(void)
         //visina pogleda locked
         camera.Position.y = 3.f;
 
-        cout << camera.Position.x << " " << camera.Position.y << " " << camera.Position.z << " " << camera.Yaw <<endl;
+        //cout << camera.Position.x << " " << camera.Position.y << " " << camera.Position.z << " " << camera.Yaw <<endl;
 
         cupolaAngle += 0.315f;
         //alpha = glm::radians(cupolaAngle);
@@ -851,7 +859,9 @@ int main(void)
         //glDrawArrays(GL_TRIANGLES,0,  tankVertices.size() / 8);
         //glBindVertexArray(0);
 
+        drawCannon(triDTest, tankG);
         drawTank(tankShader, tankG);
+
 
 
       /*  glBindVertexArray(vaotest);
@@ -1224,6 +1234,20 @@ void processInput(GLFWwindow* window)
             camera.ProcessKeyboard(RIGHT, deltaTime);
     }
 
+    //temp pomeranje cevi
+    //if (isZoomedIn) {
+        if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS) {
+            if(cannonRotationAngle!=22.5)
+                cannonRotationAngle += .5;
+        }
+        if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) {
+            if(cannonRotationAngle != -13.5)
+                cannonRotationAngle -= .5;
+        }
+
+    //}
+
+
     //temp rotacija
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
         angle -= 1.0f;
@@ -1275,11 +1299,13 @@ void processInput(GLFWwindow* window)
                 camera.Position = scopeCameraPos;
                 camera.Yaw = -90.0f; // gledaj pravo
                 camera.Pitch = 0.0f;
-                camera.ProcessMouseMovement(0, 0, 0); //pravo
+                camera.ProcessMouseMovement(0, 0); //pravo
+                camera.AdjustZoom(zoomLevel); //zapamti zoom prethodni
             }
             else {
                 camera.Position = scopeInsideTankPos;
-                camera.ProcessMouseMovement(-270.0f,-75.0f, 0); //zaokreni pogled ka scope
+                camera.AdjustZoom(0.0f);    //odzumiraj 
+                camera.ProcessMouseMovement(-270.0f,-75.0f); //zaokreni pogled ka scope
             }
             //camera.ProcessKeyboard(RIGHT, deltaTime);
             //camera.ProcessKeyboard(LEFT, deltaTime);
@@ -1372,6 +1398,38 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 
     lastX = xpos;
     lastY = ypos;
+
+    if (isLookingOutside) {
+        //levo lock
+        if (camera.Yaw <= -140.f) {
+            camera.Yaw = -140.f;
+            if (xoffset < 0) {
+                xoffset=0;
+            }
+
+        }
+        //desno lock
+        if (camera.Yaw >= -34.f) {
+            camera.Yaw = -34.f;
+            if(xoffset>0)
+                xoffset=0;
+        }
+        //dole lock
+        if (camera.Pitch <= -21.f) {
+            camera.Pitch = -21.f;
+            if (yoffset < 0)
+                yoffset=0;            
+        }
+        if (camera.Pitch >= 60.0f) {
+            camera.Pitch = 60.0f;
+            if (yoffset > 0) {
+                yoffset=0;
+            }
+        }
+
+
+    }
+    //cout << camera.Yaw << " " << camera.Pitch << endl;
 
     camera.ProcessMouseMovement(xoffset, yoffset);
 }
@@ -1479,6 +1537,7 @@ void initObjects() {
     initTank();
     initBullet();
     initWindow();
+    initCannon();
 }
 
 void initPecurka() {
@@ -1578,6 +1637,7 @@ void drawTank(int tankShader, unsigned tankTexture) {
 
     drawBullet(tankShader, tankTexture);
     drawWindow(tankShader, tankTexture);
+    //drawCannon()
 
     glBindVertexArray(0); // Unbind VAO
     glBindBuffer(GL_ARRAY_BUFFER, 0); // Unbind VBO (ako koristite)
@@ -1622,7 +1682,7 @@ void drawBullet(int bulletShader, unsigned bulletTexture) {
     //glBindTexture(GL_TEXTURE_2D, 0);
     glUniform1i(glGetUniformLocation(bulletShader, "uTex"), 0);
 
-    glBindVertexArray(VAOBullet);
+    //glBindVertexArray(VAOBullet);
 
     for (unsigned int i = 0; i < ammo; i++)
     {
@@ -1660,8 +1720,8 @@ void drawBullet(int bulletShader, unsigned bulletTexture) {
 
     glBindVertexArray(0); // Unbind VAO
     glBindBuffer(GL_ARRAY_BUFFER, 0); // Unbind VBO (ako koristite)
-    //glActiveTexture(GL_TEXTURE0); // Unbind texture (ako je potrebno)
-    //glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture (ako je koriscena)
+    glActiveTexture(GL_TEXTURE0); // Unbind texture (ako je potrebno)
+    glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture (ako je koriscena)
 }
 
 void initWindow() {
@@ -1707,4 +1767,97 @@ void drawWindow(int tankShader, unsigned tankTexture) {
     glBindBuffer(GL_ARRAY_BUFFER, 0); // Unbind VBO (ako koristite)
     glActiveTexture(GL_TEXTURE0); // Unbind texture (ako je potrebno)
     glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture (ako je koriscena)
+}
+
+void initCannon() {
+    loadObject("res/cev2.obj", cannonVertices, CANNON_SCALE);
+    glGenVertexArrays(1, &VAOCannon);
+    glGenBuffers(1, &VBOCannon);
+    // Bind VAO
+    glBindVertexArray(VAOCannon);
+
+    // Bind VBO
+    glBindBuffer(GL_ARRAY_BUFFER, VBOCannon);
+    glBufferData(GL_ARRAY_BUFFER, cannonVertices.size() * sizeof(float), cannonVertices.data(), GL_STATIC_DRAW);
+
+
+    // Podesite atribute vrhova
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0); // Pozicije
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float))); // Teksture
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float))); // Normale
+    glEnableVertexAttribArray(2);
+
+    // Unbind VAO
+    glBindVertexArray(0);
+}
+
+void drawCannon(int cannonShader, unsigned tankTexture) {
+    glUseProgram(cannonShader);
+
+    glBindVertexArray(VAOCannon);
+
+
+
+    glUniform3fv(glGetUniformLocation(cannonShader, "lightPos0"), 1, glm::value_ptr(lightPos0));
+    int projLoc = glGetUniformLocation(cannonShader, "projection");
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+    glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+
+
+    // camera/view transformation
+    int viewLoc = glGetUniformLocation(cannonShader, "view");
+
+
+
+
+    glm::mat4 view = camera.GetViewMatrix();
+
+
+
+    //ourShader.setMat4("view", view);
+    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+
+
+    int modelLoc = glGetUniformLocation(cannonShader, "model");
+    glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+    model = glm::rotate(model, glm::radians(cannonRotationAngle), glm::vec3(1.0f, 0.0f, 0.0f));
+
+    //na gore hardcode :s
+    if(cannonRotationAngle >0)
+    //model = glm::translate(model, glm::vec3(0.0f, -cannonRotationAngle/20.3f, -abs(cannonRotationAngle /29.9f)));
+    model = glm::translate(model, glm::vec3(0.0f, -cannonRotationAngle / 20.3f, -cannonRotationAngle / 29.9f));
+
+    
+    else
+    model = glm::translate(model, glm::vec3(0.0f, -cannonRotationAngle / 28.9f, -cannonRotationAngle/17.3));
+
+    cout << cannonRotationAngle << endl;
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+    // render boxes
+    //textura
+    glBindVertexArray(VAOCannon);
+    glActiveTexture(GL_TEXTURE0);
+
+    //glBindTexture(GL_TEXTURE_2D, xboxG);
+    glBindTexture(GL_TEXTURE_2D, tankTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);  // Ili GL_NEAREST
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    //glBindTexture(GL_TEXTURE_2D, 0);
+    glUniform1i(glGetUniformLocation(cannonShader, "uTex"), 0);
+    //cout << glGetUniformLocation(triDTest, "uTex") << endl;
+    //vaoo
+
+
+
+
+    glDrawArrays(GL_TRIANGLES, 0, cannonVertices.size() / 8);
+
+    glBindVertexArray(0); // Unbind VAO
+    glBindBuffer(GL_ARRAY_BUFFER, 0); // Unbind VBO (ako koristite)
+    glActiveTexture(GL_TEXTURE0); // Unbind texture (ako je potrebno)
+    glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture (ako je korišćena)
+    glUseProgram(0); // Unbind program
+
 }

@@ -33,7 +33,8 @@ void main() {
 
     //Diffuse sijalica u tenku
     posToLightDirVec = normalize(lightBulbLightPos - vs_position);
-    diffuseColor = vec3(.85f, .85f, .15f);
+    diffuseColor = vec3(1f, 1f, .6f);
+    //diffuseColor = vec3(1f, 1f, 1f);
     diffuse = clamp(dot(posToLightDirVec, vs_normal), 0.0f, 1.0f);
 
     //diffuseFinal = diffuseFinal1 + diffuseFinal2

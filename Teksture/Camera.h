@@ -115,10 +115,10 @@ public:
             Zoom = 45.0f;
         }
         if (zoomLevel == 1.0f) {
-            Zoom = 35.0f;
+            Zoom = 30.0f;
         }
         if(zoomLevel == 2.0f) {
-            Zoom = 20.0f;
+            Zoom = 15.0f;
         }
     }
 
