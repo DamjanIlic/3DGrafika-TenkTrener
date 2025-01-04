@@ -304,6 +304,76 @@ void initTank();
 void drawTank(int tankShader, unsigned tankTexture);
 //1 za on, 0 off
 int isLightOn = 1;
+glm::vec3 tankPos(0.0f, 0.0f, 0.0f);
+
+
+
+//Prozorcic
+unsigned int VAOWindow, VBOWindow;
+void initWindow();
+void drawWindow(int tankShader, unsigned tankTexture);
+int isDrawingWindow = 0;
+vector<float> windowVertices = {
+    // Koordinate (x, y, z)      // Tekstura (u, v)   // Normale (nx, ny, nz)
+
+    // Zadnja strana (normala: -Z) - kvadrat podeljen na dva trougla
+    // Donji levi ugao
+    0.8f, 0.5f, -0.005f,   1.0f, 1.0f,   -1.0f, -1.0f, -1.0f, // Donji desni ugao
+    0.8f,  -0.5f, -0.005f,   1.0f, 0.0f,   -1.0f,  1.0f, -1.0f,
+    -0.8f, -0.5f, -0.005f,   0.0f, 0.0f,   -1.0f, -1.0f, -1.0f,
+    // Gornji desni ugao
+
+    // Donji levi ugao
+    -0.8f,  0.5f, -0.005f,   0.0f, 1.0f,   -1.0f,  1.0f, -1.0f,
+    0.8f,  0.5f, -0.005f,   1.0f, 1.0f,   -1.0f,  1.0f, -1.0f, // Gornji desni ugao
+    -0.8f, -0.5f, -0.005f,   0.0f, 0.0f,   -1.0f, -1.0f, -1.0f,
+    // Prednja strana (normala: +Z)
+    -0.8f, -0.5f,  0.005f,   0.0f, 0.0f,    1.0f, -1.0f,  1.0f, // Donji levi ugao
+    0.8f, -0.5f,  0.005f,   1.0f, 0.0f,    1.0f, -1.0f,  1.0f, // Donji desni ugao
+    0.8f,  0.5f,  0.005f,   1.0f, 1.0f,    1.0f,  1.0f,  1.0f, // Gornji desni ugao
+
+    -0.8f, -0.5f,  0.005f,   0.0f, 0.0f,    1.0f, -1.0f,  1.0f, // Donji levi ugao
+    0.8f,  0.5f,  0.005f,   1.0f, 1.0f,    1.0f,  1.0f,  1.0f, // Gornji desni ugao
+    -0.8f,  0.5f,  0.005f,   0.0f, 1.0f,    1.0f,  1.0f,  1.0f, // Gornji levi ugao
+
+    //// Leva strana (normala: -X)
+    -0.8f, -0.5f, -0.005f,   0.0f, 0.0f,   -1.0f, -1.0f, -1.0f, // Donji levi ugao
+    -0.8f, -0.5f,  0.005f,   1.0f, 0.0f,   -1.0f, -1.0f,  1.0f, // Donji desni ugao
+    -0.8f,  0.5f,  0.005f,   1.0f, 1.0f,   -1.0f,  1.0f,  1.0f, // Gornji desni ugao
+
+    -0.8f, -0.5f, -0.005f,   0.0f, 0.0f,   -1.0f, -1.0f, -1.0f, // Donji levi ugao
+    -0.8f,  0.5f,  0.005f,   1.0f, 1.0f,   -1.0f,  1.0f,  1.0f, // Gornji desni ugao
+    -0.8f,  0.5f, -0.005f,   0.0f, 1.0f,   -1.0f,  1.0f, -1.0f, // Gornji levi ugao
+
+    // Desna strana (normala: +X)
+    0.8f,  0.5f,  0.005f,   1.0f, 1.0f,    1.0f,  1.0f,  1.0f, // Gornji desni ugao
+    0.8f, -0.5f,  0.005f,   1.0f, 0.0f,    1.0f, -1.0f,  1.0f, // Donji desni ugao
+    0.8f, -0.5f, -0.005f,   0.0f, 0.0f,    1.0f, -1.0f, -1.0f, // Donji levi ugao
+
+    0.8f,  0.5f, -0.005f,   0.0f, 1.0f,    1.0f,  1.0f, -1.0f, // Gornji levi ugao
+    0.8f,  0.5f,  0.005f,   1.0f, 1.0f,    1.0f,  1.0f,  1.0f, // Gornji desni ugao
+    0.8f, -0.5f, -0.005f,   0.0f, 0.0f,    1.0f, -1.0f, -1.0f, // Donji levi ugao
+
+    //// Donja strana (normala: -Y)
+    -0.8f, -0.5f, -0.005f,   0.0f, 0.0f,   -1.0f, -1.0f, -1.0f, // Donji levi ugao
+    0.8f, -0.5f, -0.005f,   1.0f, 0.0f,    1.0f, -1.0f, -1.0f, // Donji desni ugao
+    0.8f, -0.5f,  0.005f,   1.0f, 1.0f,    1.0f, -1.0f,  1.0f, // Gornji desni ugao
+
+    -0.8f, -0.5f, -0.005f,   0.0f, 0.0f,   -1.0f, -1.0f, -1.0f, // Donji levi ugao
+    0.8f, -0.5f,  0.005f,   1.0f, 1.0f,    1.0f, -1.0f,  1.0f, // Gornji desni ugao
+    -0.8f, -0.5f,  0.005f,   0.0f, 1.0f,   -1.0f, -1.0f,  1.0f, // Gornji levi ugao
+
+    //// Gornja strana (normala: +Y)
+    // Donji levi ugao
+    0.8f,  0.5f,  0.005f,   1.0f, 1.0f,    1.0f,  1.0f,  1.0f,
+    0.8f,  0.5f, -0.005f,   1.0f, 0.0f,    1.0f,  1.0f, -1.0f, // Donji desni ugao
+    -0.8f,  0.5f, -0.005f,   0.0f, 0.0f,   -1.0f,  1.0f, -1.0f,
+
+    -0.8f,  0.5f, -0.005f,   0.0f, 0.0f,   -1.0f,  1.0f, -1.0f,
+    0.8f,  0.5f,  0.005f,   1.0f, 1.0f,    1.0f,  1.0f,  1.0f,
+    -0.8f,  0.5f,  0.005f,   0.0f, 1.0f,   -1.0f,  1.0f,  1.0f,
+};
+
 
 //METAK
 unsigned int VAOBullet, VBOBullet;
@@ -399,7 +469,7 @@ int main(void)
     unsigned aimG = loadImageToTexture("res/aim.png");
     unsigned dottedG = loadImageToTexture("res/dotted.png");
     unsigned xboxG = loadImageToTexture("res/box.png");
-    unsigned tankG = loadImageToTexture("res/box.png");
+    unsigned tankG = loadImageToTexture("res/teksturaBoja.png");
     // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ SEJDERI ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
     unsigned int unifiedShader = createShader("basic.vert", "basic.frag");
@@ -539,13 +609,13 @@ int main(void)
 
 
     glm::vec3 cubePositions[] = {
-        glm::vec3(0.0f,  3.45f,  0.6f),
-        glm::vec3(0.0f,  0.0f, 0.0f),
-        glm::vec3(-7.5f, -2.2f, -2.5f),
-        glm::vec3(-3.8f, -2.0f, -12.3f),
-        glm::vec3(12.4f, -0.4f, -3.5f),
+        glm::vec3(3.0f,  3.45f,  0.6f),
+        glm::vec3(0.0f,  0.0f, 7.0f),
+        glm::vec3(-7.5f, 2.2f, -2.5f),
+        glm::vec3(-3.8f, 2.0f, -12.3f),
+        glm::vec3(12.4f, 0.4f, -3.5f),
         glm::vec3(-6.7f,  3.0f, -7.5f),
-        glm::vec3(9.3f, -2.0f, -2.5f),
+        glm::vec3(9.3f, 2.0f, -2.5f),
         glm::vec3(11.5f,  2.0f, -2.5f),
         glm::vec3(5.5f,  15.0f, -2.5f),
         glm::vec3(5.5f,  5.5f -1.0f, 5.5f)
@@ -557,10 +627,10 @@ int main(void)
     //tlo
     float groundVertices[] = {
         // Pozicije           // Teksturne koordinate
-        -50.0f, -5.0f, -50.0f,  0.0f, 0.0f,  -1.0f, 1.0f, -1.0f,// Levo dole
-         50.0f, -5.0f, -50.0f,  1.0f, 0.0f, 1.0f, 1.0f, -1.0f,// Desno dole
-         50.0f, -5.0f,  50.0f,  1.0f, 1.0f,  1.0f, 1.0f, 1.0f,// Desno gore
-        -50.0f, -5.0f,  50.0f,  0.0f, 1.0f,  -1.0f, 1.0f, 1.0f,// Levo gore
+        -50.0f, -0.0f, -50.0f,  0.0f, 0.0f,  -1.0f, 1.0f, -1.0f,// Levo dole
+         50.0f, -0.0f, -50.0f,  1.0f, 0.0f, 1.0f, 1.0f, -1.0f,// Desno dole
+         50.0f, -0.0f,  50.0f,  1.0f, 1.0f,  1.0f, 1.0f, 1.0f,// Desno gore
+        -50.0f, -0.0f,  50.0f,  0.0f, 1.0f,  -1.0f, 1.0f, 1.0f,// Levo gore
     };
 
     unsigned int groundIndices[] = {
@@ -715,7 +785,7 @@ int main(void)
         glActiveTexture(GL_TEXTURE0);
 
         //glBindTexture(GL_TEXTURE_2D, xboxG);
-        glBindTexture(GL_TEXTURE_2D, textureID);
+        glBindTexture(GL_TEXTURE_2D, tankG);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);  // Ili GL_NEAREST
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         //glBindTexture(GL_TEXTURE_2D, 0);
@@ -730,6 +800,7 @@ int main(void)
 
         std::vector<glm::vec3> cubePositionsNew;
 
+        //visina pogleda locked
         camera.Position.y = 3.f;
 
         cout << camera.Position.x << " " << camera.Position.y << " " << camera.Position.z << " " << camera.Yaw <<endl;
@@ -747,7 +818,7 @@ int main(void)
 
 
 
-
+       // cubePositions[0] = cubePositions[0] + glm::vec3(0.05f, 0.05f, 0.05f);
         //glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
         //model = glm::rotate(model, glm::radians(0.0f), glm::vec3(1.0f, 0.3f, 0.5f));
         //glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
@@ -759,7 +830,9 @@ int main(void)
             //angle += 2.0f;
             //model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.0f, 1.0f));
             model = glm::translate(model, cubePositions[i]);
-
+            //if (i == 0) {
+            //    model = glm::translate(model, )
+            //}
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
             glDrawArrays(GL_TRIANGLES, 0, pecurka3d.size()/8);
             //glDrawElements(GL_TRIANGLES, sizeof(indices3d) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
@@ -778,7 +851,7 @@ int main(void)
         //glDrawArrays(GL_TRIANGLES,0,  tankVertices.size() / 8);
         //glBindVertexArray(0);
 
-        drawTank(tankShader, textureID);
+        drawTank(tankShader, tankG);
 
 
       /*  glBindVertexArray(vaotest);
@@ -1122,11 +1195,13 @@ void processInput(GLFWwindow* window)
 
     //cam related WASD movement
     if (!isZoomedIn && !isLookingOutside) {
+        
+        //ogranicenje kretanja u tenku, 2 coska
         if (camera.Position.x < -2.0f) {
             camera.Position.x = -2.0f;
         }
-        if (camera.Position.z > 2.35f) {
-            camera.Position.z = 2.35f;
+        if (camera.Position.z > 2.05f) {
+            camera.Position.z = 2.05f;
         }
 
 
@@ -1403,6 +1478,7 @@ void initObjects() {
     initPecurka();
     initTank();
     initBullet();
+    initWindow();
 }
 
 void initPecurka() {
@@ -1432,7 +1508,7 @@ void initPecurka() {
 }
 
 void initTank() {
-    loadObject("res/tenk3.obj", tankVertices, TANK_SCALE*5.0f);
+    loadObject("res/tnk2.obj", tankVertices, TANK_SCALE*5.0f);
     glGenVertexArrays(1, &VAOTank);
     glGenBuffers(1, &VBOTank);
 
@@ -1465,7 +1541,7 @@ void drawTank(int tankShader, unsigned tankTexture) {
 
     //da li je sijalica ukljucena
     glUniform1i(glGetUniformLocation(tankShader, "isLightOn"), isLightOn);
-
+    glUniform1i(glGetUniformLocation(tankShader, "isDrawingWindow"), 0);
     //projekcione matrice
     int projLoc = glGetUniformLocation(tankShader, "projection");
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
@@ -1501,6 +1577,7 @@ void drawTank(int tankShader, unsigned tankTexture) {
     glDrawArrays(GL_TRIANGLES, 0, tankVertices.size() / 8);
 
     drawBullet(tankShader, tankTexture);
+    drawWindow(tankShader, tankTexture);
 
     glBindVertexArray(0); // Unbind VAO
     glBindBuffer(GL_ARRAY_BUFFER, 0); // Unbind VBO (ako koristite)
@@ -1511,7 +1588,7 @@ void drawTank(int tankShader, unsigned tankTexture) {
 
 
 void initBullet() {
-    loadObject("res/bulet3.obj", bulletVertices, BULLET_SCALE);
+    loadObject("res/blt3.obj", bulletVertices, BULLET_SCALE);
     glGenVertexArrays(1, &VAOBullet);
     glGenBuffers(1, &VBOBullet);
     // Bind VAO
@@ -1556,11 +1633,19 @@ void drawBullet(int bulletShader, unsigned bulletTexture) {
         float angle = 0.0f;
         if (i >= 2) {
             angle = -90.0f;
+            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.0f, 0.0f));
+            if (i < 7) {
+                angle = 45.f;
+            }
+            else {
+                angle = -45.f;
+            }
+            model = glm::rotate(model, glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
         }
         else {
-            angle = 0.0f;
+
         }
-        model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.0f, 0.0f));
+
 
         //float angle = 20.0f * i;
         //model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
@@ -1575,6 +1660,51 @@ void drawBullet(int bulletShader, unsigned bulletTexture) {
 
     glBindVertexArray(0); // Unbind VAO
     glBindBuffer(GL_ARRAY_BUFFER, 0); // Unbind VBO (ako koristite)
+    //glActiveTexture(GL_TEXTURE0); // Unbind texture (ako je potrebno)
+    //glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture (ako je koriscena)
+}
+
+void initWindow() {
+    glGenVertexArrays(1, &VAOWindow);
+    glGenBuffers(1, &VBOWindow);
+
+    // Bind VAO
+    glBindVertexArray(VAOWindow);
+
+    // Bind VBO
+    glBindBuffer(GL_ARRAY_BUFFER, VBOWindow);
+    glBufferData(GL_ARRAY_BUFFER, windowVertices.size() * sizeof(float), windowVertices.data(), GL_STATIC_DRAW);
+
+
+    // Podesite atribute vrhova
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0); // Pozicije
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float))); // Teksture
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float))); // Normale
+    glEnableVertexAttribArray(2);
+
+    // Unbind VAO
+    glBindVertexArray(0);
+}
+
+void drawWindow(int tankShader, unsigned tankTexture) {
+    glBindVertexArray(VAOWindow);
+
+    glUniform1i(glGetUniformLocation(tankShader, "isDrawingWindow"), 1);
+
+
+    int modelLoc = glGetUniformLocation(tankShader, "model");
+    glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+    model = glm::rotate(model, glm::radians(3.f), glm::vec3(1.0, 0.0, 0.0f));
+    model = glm::translate(model, windowCameraPos+glm::vec3(0.15f, -.1f, -0.45f));
+
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+
+    glDrawArrays(GL_TRIANGLES, 0, windowVertices.size() / 8);
+
+    glBindVertexArray(0); // Unbind VAO
+    glBindBuffer(GL_ARRAY_BUFFER, 0); // Unbind VBO (ako koristite)
     glActiveTexture(GL_TEXTURE0); // Unbind texture (ako je potrebno)
-    glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture (ako je korišćena)
+    glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture (ako je koriscena)
 }

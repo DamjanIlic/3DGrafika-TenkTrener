@@ -21,8 +21,8 @@ void main() {
     float diffuse = clamp(dot(posToLightDirVec, vs_normal), 0.0f, 1.0f);
     vec3 diffuseFinal = diffuseColor * diffuse;
 
-    FragColor = vec4(0.9, 0.9, 0.9f, 1.0f)* (vec4(ambientLight, 1.0f) + vec4(diffuseFinal, 1.f));
-    //FragColor = texture(uTex, chTex) * (vec4(ambientLight, 1.0f) + vec4(diffuseFinal, 1.f));
+    //FragColor = vec4(0.9, 0.9, 0.9f, 1.0f)* (vec4(ambientLight, 1.0f) + vec4(diffuseFinal, 1.f));
+    FragColor = texture(uTex, chTex) * (vec4(ambientLight, 1.0f) + vec4(diffuseFinal, 1.f));
     if (FragColor == vec4(0.0, 0.0, 0.0, 1.0)) {
     // Tekstura nije postavljena (prazna)
     FragColor = vec4(1.0, 0.0, 0.0, 1.0);  // Na primer, ispisivanje crvene boje za grešku
