@@ -12,7 +12,7 @@ uniform sampler2D uTex;
 void main() {
 
     //AmbientLight
-    vec3 ambientLight = vec3(0.025f, 0.025f, 0.025f);
+    vec3 ambientLight = vec3(0.225f, 0.225f, 0.225f);
     
     //vs_normal = normalize(vs_normal);
     //Diffuse 

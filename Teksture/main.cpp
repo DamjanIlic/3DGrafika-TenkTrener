@@ -60,7 +60,7 @@ struct Target {
     bool isAlive = true;
 };
 
-void shoot(float currentTime, std::vector<Target> &targets);
+
 
 void drawtxt(unsigned int shader, float x1, float x2, float y1, float y2, unsigned texture) {
     glUseProgram(shader);
@@ -208,8 +208,8 @@ void RenderText(unsigned int shader, std::string text, float x, float y, float s
 bool shouldDrawBullet = true;
 int ammo = 10;
 bool canShoot = true;
-const double cooldown = 7.5;
-float lastShotTime = 0.0f;
+const float cooldown = 1.5f;
+float lastShotTime = -cooldown;     //moze odmah da puca
 float voltage = 75.0f;
 float hydraulic = 0.0f;
 bool toggleMode = true;
@@ -234,6 +234,12 @@ float yaw = -90.0f, pitch = 0.0f; // Za rotaciju kamere
 // timing
 float deltaTime = 0.0f;	// time between current frame and last frame
 float lastFrame = 0.0f;
+
+
+
+void calculateInitialVelocity();
+bool isBulletFlying = false;
+glm::vec3 initialVelocity = glm::vec3(0.0f, 0.0f, 0.0f);
 
 
 //Kamera
@@ -293,7 +299,7 @@ void initObjects();
 
 //PECURKA
 unsigned int VAOPecurka, VBOPecurka;
-const float PECURKA_SCALE = 1.5f;
+const float PECURKA_SCALE = .5f;
 void initPecurka();
 
 //TENK
@@ -397,6 +403,19 @@ glm::vec3 bulletPositions[] = {
     glm::vec3(3.0f, 2.45f, 2.3f),
 };
 
+
+struct Projectile {
+    glm::vec3 position = scopeCameraPos;
+    float angleFired;
+    bool isFlying;
+    bool isFired;
+};
+
+
+void shoot(float currentTime);
+
+Projectile projectiles[10];
+
 //CEV TENKA
 unsigned int VAOCannon, VBOCannon;
 vector<float> cannonVertices;
@@ -487,6 +506,9 @@ int main(void)
 
     //3d
     unsigned int triDTest = createShader("kocka3dtest.vert", "kocka3dtest.frag");
+
+
+    //Projectile projectiles[10];
 
 
     //float vertices3d[] = {
@@ -585,7 +607,7 @@ int main(void)
     };
     vector<float> pecurka3d;
     loadObject("res/PECURKA.obj", pecurka3d, PECURKA_SCALE);
-    vertices3d = pecurka3d;
+    //vertices3d = pecurka3d;
 
     unsigned int indices3d[] = {
         // Zadnja strana
@@ -614,19 +636,39 @@ int main(void)
     };
 
     //normale 
-
+    float asdf = 3.0f;
 
     glm::vec3 cubePositions[] = {
-        glm::vec3(3.0f,  3.45f,  0.6f),
-        glm::vec3(0.0f,  0.0f, 7.0f),
-        glm::vec3(-7.5f, 2.2f, -2.5f),
-        glm::vec3(-3.8f, 2.0f, -12.3f),
-        glm::vec3(12.4f, 0.4f, -3.5f),
-        glm::vec3(-6.7f,  3.0f, -7.5f),
-        glm::vec3(9.3f, 2.0f, -2.5f),
-        glm::vec3(11.5f,  2.0f, -2.5f),
-        glm::vec3(5.5f,  15.0f, -2.5f),
-        glm::vec3(5.5f,  5.5f -1.0f, 5.5f)
+        glm::vec3(5.0f,  0.5f, 7.0f)* asdf,
+        glm::vec3(0.0f,  0.5f, 7.0f) * asdf,
+        glm::vec3(-7.5f, 0.5f, -2.5f)* asdf,
+        glm::vec3(-3.8f, 0.5f, -12.3f)* asdf,
+        glm::vec3(12.4f, 0.5f, -3.5f)* asdf,
+        glm::vec3(-6.7f,  0.5f, -7.5f)* asdf,
+        glm::vec3(9.3f, 0.5f, -2.5f)* asdf,
+        glm::vec3(11.5f,  0.5f, -2.5f)* asdf,
+        glm::vec3(5.5f,  0.5f, -2.5f)* asdf,
+        glm::vec3(5.5f,  0.5f -1.0f, 5.5f)* asdf
+    };
+
+    for (int i = 0; i < 10; i++) {
+        cubePositions[i].y = 0.5f;
+    }
+
+   // cubePositions *= 3.0f;
+
+    glm::vec3 bombaPositions[] = {
+    scopeCameraPos,
+    scopeCameraPos,
+    scopeCameraPos,
+    scopeCameraPos,
+    scopeCameraPos,
+    scopeCameraPos,
+    scopeCameraPos,
+    scopeCameraPos,
+    scopeCameraPos,
+    scopeCameraPos
+
     };
 
     float cupolaAngle = 0.0f; // Ugao rotacije u stepenima
@@ -635,10 +677,10 @@ int main(void)
     //tlo
     float groundVertices[] = {
         // Pozicije           // Teksturne koordinate
-        -50.0f, -0.0f, -50.0f,  0.0f, 0.0f,  -1.0f, 1.0f, -1.0f,// Levo dole
-         50.0f, -0.0f, -50.0f,  1.0f, 0.0f, 1.0f, 1.0f, -1.0f,// Desno dole
-         50.0f, -0.0f,  50.0f,  1.0f, 1.0f,  1.0f, 1.0f, 1.0f,// Desno gore
-        -50.0f, -0.0f,  50.0f,  0.0f, 1.0f,  -1.0f, 1.0f, 1.0f,// Levo gore
+        -150.0f, -0.0f, -150.0f,  0.0f, 0.0f,  -1.0f, 1.0f, -1.0f,// Levo dole
+         150.0f, -0.0f, -150.0f,  1.0f, 0.0f, 1.0f, 1.0f, -1.0f,// Desno dole
+         150.0f, -0.0f,  150.0f,  1.0f, 1.0f,  1.0f, 1.0f, 1.0f,// Desno gore
+        -150.0f, -0.0f,  150.0f,  0.0f, 1.0f,  -1.0f, 1.0f, 1.0f,// Levo gore
     };
 
     unsigned int groundIndices[] = {
@@ -702,7 +744,7 @@ int main(void)
 
     // Bind VBO
     glBindBuffer(GL_ARRAY_BUFFER, VBO3d);
-    glBufferData(GL_ARRAY_BUFFER, pecurka3d.size() * sizeof(float), pecurka3d.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertices3d.size() * sizeof(float), vertices3d.data(), GL_STATIC_DRAW);
 
 
     // Podesite atribute vrhova
@@ -732,7 +774,7 @@ int main(void)
     else {
         std::cout << "Tekstura ucitana uspesno!" << std::endl;
     }
-
+    //glm::vec3 initialVelocity;
 
     // ++++++++++++++++++++++++++++++++++++++++++++++++++++++ RENDER PETLJA ++++++++++++++++++++++++++++++++++++++++++++++++++++++
     while (!glfwWindowShouldClose(window)) {
@@ -745,6 +787,7 @@ int main(void)
         //cubePositions[9] = glm::vec3(cameraPosX, cameraPosY - 1.0f, cameraPosZ);
         //times
         float currentFrame = static_cast<float>(glfwGetTime());
+        updateReadyIndicator(currentFrame);
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
@@ -787,8 +830,43 @@ int main(void)
 
         //ourShader.setMat4("view", view);
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-        // render boxes
-        //textura
+
+        //KOCKE
+        glBindVertexArray(VAO3d);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, xboxG);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);  // Ili GL_NEAREST
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        //glBindTexture(GL_TEXTURE_2D, 0);
+        glUniform1i(glGetUniformLocation(triDTest, "uTex"), 0);
+
+        int modelLoc = glGetUniformLocation(triDTest, "model");
+
+
+        for (unsigned int i = 0; i < 10; i++)
+        {
+            // calculate the model matrix for each object and pass it to shader before drawing
+            glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+            model = glm::rotate(model, glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
+            //angle += 2.0f;
+            //model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.0f, 1.0f));
+            model = glm::translate(model, cubePositions[i]);
+            //if (i == 0) {
+            //    model = glm::translate(model, )
+            //}
+            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+            glDrawArrays(GL_TRIANGLES, 0, vertices3d.size() / 8);
+            //glDrawElements(GL_TRIANGLES, sizeof(indices3d) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
+            //glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
+
+
+
+
+
+
+        // render PECURKE (bombe?XD)
+        //textura 
         glBindVertexArray(VAOPecurka);
         glActiveTexture(GL_TEXTURE0);
 
@@ -803,16 +881,16 @@ int main(void)
 
 
 
-        int modelLoc = glGetUniformLocation(triDTest, "model");
+
 
 
         std::vector<glm::vec3> cubePositionsNew;
 
         //visina pogleda locked
-        camera.Position.y = 3.f;
+       // camera.Position.y = 3.f;
 
         //cout << camera.Position.x << " " << camera.Position.y << " " << camera.Position.z << " " << camera.Yaw <<endl;
-
+        cout << camera.Front.x << " " << camera.Front.y << " " << camera.Front.z << endl;
         cupolaAngle += 0.315f;
         //alpha = glm::radians(cupolaAngle);
         //for (int i = 0; i < sizeof(cubePositions) / sizeof(cubePositions[0]); ++i) {
@@ -830,14 +908,68 @@ int main(void)
         //glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
         //model = glm::rotate(model, glm::radians(0.0f), glm::vec3(1.0f, 0.3f, 0.5f));
         //glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        
+
+        //if(isZoo)
+        //if (currentFrame < 0.1f) {
+        //    float initialSpeed = 0.01f;
+        //    initialVelocity = glm::vec3(
+        //        initialSpeed * cos(glm::radians(cannonRotationAngle)), // Horizontalna komponenta
+        //        initialSpeed * sin(glm::radians(cannonRotationAngle)), // Vertikalna komponenta
+        //        0.0f                         // Ako je metak u 2D, Z komponenta je 0
+        //    );
+        //}
+        //else {
+
+        //}
+
         for (unsigned int i = 0; i < 10; i++)
         {
+            //cout << i << endl;
             // calculate the model matrix for each object and pass it to shader before drawing
             glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
-            model = glm::rotate(model, glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
+            if (projectiles[i].isFired && !projectiles[i].isFlying) {
+                model = glm::rotate(model, glm::radians(-projectiles[i].angleFired+angle), glm::vec3(0.0f, 1.0f, 0.0f));
+
+            }
+            else {
+                model = glm::mat4(1.0f);
+            }
+            if (true) {
+                //cout << i << endl;
+                //model = glm::rotate(model, glm::radians(cannonRotationAngle), glm::vec3(1.0f, 0.0f, 0.0f));
+                if (cannonRotationAngle > 0)
+                    //model = glm::translate(model, glm::vec3(0.0f, -cannonRotationAngle/20.3f, -abs(cannonRotationAngle /29.9f)));
+                    //model = glm::translate(model, glm::vec3(0.0f, -cannonRotationAngle / 20.3f, -cannonRotationAngle / 29.9f));
+                {
+                }
+
+                else
+                    //model = glm::translate(model, glm::vec3(0.0f, -cannonRotationAngle / 28.9f, -cannonRotationAngle / 17.3));
+                {
+                }
+                if (projectiles[i].isFlying) {
+                    projectiles[i].position.z -= initialVelocity.x * deltaTime;
+                    projectiles[i].position.y += initialVelocity.y * deltaTime - 0.5f * 10.f * deltaTime * deltaTime;
+                    initialVelocity.y -= 2.f * deltaTime;
+                    //if (bombaPositions[10 - ammo-1].y < 0.) {
+                    //    initialVelocity = glm::vec3(0.f, 0.f, 0.f);
+                    //   // cubePositions.ad
+                    //    bombaPositions[10 - ammo] = scopeCameraPos; // sledecu stavi na mesto
+                    //    isBulletFlying = 0;
+                    //}
+                    if (projectiles[i].position.y <= 0.f) {
+                        projectiles[i].isFlying = false;
+                        initialVelocity = glm::vec3(0.0f, 0.0f, 0.0f);
+                    }
+                }
+
+            }
+            
             //angle += 2.0f;
             //model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.0f, 1.0f));
-            model = glm::translate(model, cubePositions[i]);
+            //if()
+            model = glm::translate(model, projectiles[i].position);
             //if (i == 0) {
             //    model = glm::translate(model, )
             //}
@@ -1037,7 +1169,7 @@ void shootBullet(unsigned int shaderProgram) {
 }
 
 void updateReadyIndicator(float currentTime) {
-    if (ammo > 0 && (currentTime - lastShotTime) >= cooldown) {
+    if (ammo > 0 && (currentTime - lastShotTime) >= cooldown && !isBulletFlying) {
         canShoot = true;
     }
     else {
@@ -1045,11 +1177,19 @@ void updateReadyIndicator(float currentTime) {
     }
 }
 
-void shoot(float currentTime, std::vector<Target> &targets) {
+void shoot(float currentTime) {
     if (canShoot && ammo > 0) {
         ammo--;  // Smanji municiju
         lastShotTime = currentTime;
         std::cout << "Paljba!" << std::endl;
+
+        if (initialVelocity == glm::vec3(0.0f, 0.0f, 0.0f))
+            calculateInitialVelocity();
+        
+        projectiles[9 - ammo].angleFired = angle;
+        projectiles[9 - ammo].isFired = true;
+        projectiles[9 - ammo].isFlying = true;
+
 
         //for (auto it = targets.begin(); it != targets.end(); ) {
         //    if (std::abs(it->x - it->targetOffset) < 0.15) {
@@ -1063,13 +1203,7 @@ void shoot(float currentTime, std::vector<Target> &targets) {
         //        ++it;  // Ako nije pogodjena, predji na sledeci cilj
         //    }
         //}
-        for (Target &t : targets) {
-            //t.x + w/2 (0.1) = sredina mete
-            if ((std::abs((t.x+0.1) - t.targetOffset) < 0.065) && t.isAlive) {
-                t.isAlive = false;
-                hit++;
-            }
-        }
+
     }
 }
 void initRectangle() {
@@ -1207,20 +1341,20 @@ void processInput(GLFWwindow* window)
     if (!isZoomedIn && !isLookingOutside) {
         
         //ogranicenje kretanja u tenku, 2 coska
-        if (camera.Position.x < -2.0f) {
-            camera.Position.x = -2.0f;
-        }
-        if (camera.Position.z > 2.05f) {
-            camera.Position.z = 2.05f;
-        }
+        //if (camera.Position.x < -2.0f) {
+        //    camera.Position.x = -2.0f;
+        //}
+        //if (camera.Position.z > 2.05f) {
+        //    camera.Position.z = 2.05f;
+        //}
 
 
-        if (camera.Position.x > 1.93f) {
-            camera.Position.x = 1.93f;
-        }
-        if (camera.Position.z < -0.13f) {
-            camera.Position.z = -0.13f;
-        }
+        //if (camera.Position.x > 1.93f) {
+        //    camera.Position.x = 1.93f;
+        //}
+        //if (camera.Position.z < -0.13f) {
+        //    camera.Position.z = -0.13f;
+        //}
 
 
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
@@ -1273,11 +1407,7 @@ void processInput(GLFWwindow* window)
     //pucanje
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
         if (!isSpacePressed) {
-            if(ammo != 0)
-                ammo--;
-            else {
-                ammo = 10;
-            }
+            shoot(static_cast<float>(glfwGetTime()));
             isSpacePressed = true;
         }
     }
@@ -1833,7 +1963,7 @@ void drawCannon(int cannonShader, unsigned tankTexture) {
     else
     model = glm::translate(model, glm::vec3(0.0f, -cannonRotationAngle / 28.9f, -cannonRotationAngle/17.3));
 
-    cout << cannonRotationAngle << endl;
+    //cout << cannonRotationAngle << endl;
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
     // render boxes
     //textura
@@ -1860,4 +1990,13 @@ void drawCannon(int cannonShader, unsigned tankTexture) {
     glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture (ako je korišćena)
     glUseProgram(0); // Unbind program
 
+}
+
+
+void calculateInitialVelocity() {
+    initialVelocity = glm::vec3(
+        10.f * cos(glm::radians(cannonRotationAngle)),
+        10.f * sin(glm::radians(cannonRotationAngle)),
+        0.0f)
+        ;
 }
