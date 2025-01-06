@@ -426,6 +426,105 @@ void drawCannon(int cannonShader, unsigned cannonTexture);
 
 
 
+//PARTICLES :-D
+struct Particle {
+    glm::vec3 position;     // Pozicija cestice u 3D prostoru
+    glm::vec3 velocity;     // Brzina (kretanje)
+    float lifetime;         // Vreme trajanja
+    glm::vec4 color;        // Boja (sa providnoscu)
+    float size;             // Velicina cestice
+    float rotation;         // Rotacija u radijanima
+};
+
+enum PARTICLE_TYPE {
+    IMPACT,
+    CANNON_SMOKE,
+    CANNON_EXPLOSION
+};
+
+const int MAX_PARTICLES = 400;
+
+//Particle particles[MAX_PARTICLES];
+Particle impactExplosionParticles[MAX_PARTICLES];
+float startEmitImpact = 0.0f;
+
+Particle cannonSmokeParticles[MAX_PARTICLES];
+Particle cannonExplosionParticles[MAX_PARTICLES];
+float startEmitCannon = 0.0f;
+bool shouldCreateNewSmokeParticles = true;
+
+vector<float> particlesVertices = {
+    // Koordinate (x, y, z) 
+
+    // Zadnja strana (normala: -Z) - kvadrat podeljen na dva trougla
+     // Donji levi ugao
+     0.5f,  0.5f, -0.5f, 
+     0.5f, -0.5f, -0.5f, 
+    -0.5f, -0.5f, -0.5f,  
+    // Gornji desni ugao
+
+// Donji levi ugao
+       -0.5f,  0.5f, -0.5f,
+        0.5f,  0.5f, -0.5f, 
+        // Gornji levi ugao
+               -0.5f, -0.5f, -0.5f,
+               // Prednja strana (normala: +Z)
+               -0.5f, -0.5f,  0.5f, 
+                0.5f, -0.5f,  0.5f,  
+                0.5f,  0.5f,  0.5f, 
+
+               -0.5f, -0.5f,  0.5f,   
+                0.5f,  0.5f,  0.5f,  
+               -0.5f,  0.5f,  0.5f, 
+
+               //// Leva strana (normala: -X)
+               -0.5f, -0.5f, -0.5f, 
+               -0.5f, -0.5f,  0.5f,  
+               -0.5f,  0.5f,  0.5f, 
+
+               -0.5f, -0.5f, -0.5f,
+               -0.5f,  0.5f,  0.5f, 
+               -0.5f,  0.5f, -0.5f,  
+
+               // Desna strana (normala: +X)
+                0.5f,  0.5f,  0.5f,  
+                0.5f, -0.5f,  0.5f,  
+                0.5f, -0.5f, -0.5f,  
+                0.5f,  0.5f, -0.5f,   
+                0.5f,  0.5f,  0.5f, 
+                0.5f, -0.5f, -0.5f,  
+
+
+                //// Donja strana (normala: -Y)
+                // 
+                -0.5f, -0.5f, -0.5f,  
+                 0.5f, -0.5f, -0.5f,  
+                 0.5f, -0.5f,  0.5f,  
+
+                -0.5f, -0.5f, -0.5f,  
+                 0.5f, -0.5f,  0.5f,   
+                -0.5f, -0.5f,  0.5f,   
+
+                //// Gornja strana (normala: +Y)
+        // Donji levi ugao
+                0.5f,  0.5f,  0.5f,  
+                0.5f,  0.5f, -0.5f,  
+               -0.5f,  0.5f, -0.5f,  
+
+
+               -0.5f,  0.5f,  0.5f,
+                0.5f,  0.5f,  0.5f,   
+               -0.5f,  0.5f, -0.5f, 
+};
+
+unsigned int VAOParticle, VBOParticle; 
+void initParticles(glm::vec3 position, Particle particles[MAX_PARTICLES], PARTICLE_TYPE type);
+void setUpParticleSystem();
+void renderParticles(int shader, Particle particles[MAX_PARTICLES], PARTICLE_TYPE type);
+void updateParticles(float deltaTime, Particle particles[MAX_PARTICLES], PARTICLE_TYPE type);
+
+
+
 
 // Funkcije za kretanje kamere pomocu tastature i misa
 void processInput(GLFWwindow* window);
@@ -506,6 +605,7 @@ int main(void)
 
     //3d
     unsigned int triDTest = createShader("kocka3dtest.vert", "kocka3dtest.frag");
+    unsigned int particleShader = createShader("particle.vert", "particle.frag");
 
 
     //Projectile projectiles[10];
@@ -545,16 +645,16 @@ int main(void)
 
         // Zadnja strana (normala: -Z) - kvadrat podeljen na dva trougla
          // Donji levi ugao
-        0.5f,  0.5f, -0.5f,   1.0f, 1.0f,   -1.0f,  1.0f, -1.0f,
+         0.5f,  0.5f, -0.5f,   1.0f, 1.0f,   -1.0f,  1.0f, -1.0f,
          0.5f, -0.5f, -0.5f,   1.0f, 0.0f,   -1.0f, -1.0f, -1.0f, // Donji desni ugao
-                  -0.5f, -0.5f, -0.5f,   0.0f, 0.0f,   -1.0f, -1.0f, -1.0f,
+        -0.5f, -0.5f, -0.5f,   0.0f, 0.0f,   -1.0f, -1.0f, -1.0f,
           // Gornji desni ugao
 
  // Donji levi ugao
-                -0.5f,  0.5f, -0.5f,   0.0f, 1.0f,   -1.0f,  1.0f, -1.0f,
+        -0.5f,  0.5f, -0.5f,   0.0f, 1.0f,   -1.0f,  1.0f, -1.0f,
          0.5f,  0.5f, -0.5f,   1.0f, 1.0f,   -1.0f,  1.0f, -1.0f, // Gornji desni ugao
  // Gornji levi ugao
-                -0.5f, -0.5f, -0.5f,   0.0f, 0.0f,   -1.0f, -1.0f, -1.0f,
+        -0.5f, -0.5f, -0.5f,   0.0f, 0.0f,   -1.0f, -1.0f, -1.0f,
         // Prednja strana (normala: +Z)
         -0.5f, -0.5f,  0.5f,   0.0f, 0.0f,    1.0f, -1.0f,  1.0f, // Donji levi ugao
          0.5f, -0.5f,  0.5f,   1.0f, 0.0f,    1.0f, -1.0f,  1.0f, // Donji desni ugao
@@ -590,19 +690,19 @@ int main(void)
           0.5f, -0.5f,  0.5f,   1.0f, 1.0f,    1.0f, -1.0f,  1.0f, // Gornji desni ugao
 
          -0.5f, -0.5f, -0.5f,   0.0f, 0.0f,   -1.0f, -1.0f, -1.0f, // Donji levi ugao
-         0.5f, -0.5f,  0.5f,   1.0f, 1.0f,    1.0f, -1.0f,  1.0f, // Gornji desni ugao
+          0.5f, -0.5f,  0.5f,   1.0f, 1.0f,    1.0f, -1.0f,  1.0f, // Gornji desni ugao
          -0.5f, -0.5f,  0.5f,   0.0f, 1.0f,   -1.0f, -1.0f,  1.0f, // Gornji levi ugao
 
          //// Gornja strana (normala: +Y)
  // Donji levi ugao
-                0.5f,  0.5f,  0.5f,   1.0f, 1.0f,    1.0f,  1.0f,  1.0f,
+         0.5f,  0.5f,  0.5f,   1.0f, 1.0f,    1.0f,  1.0f,  1.0f,
          0.5f,  0.5f, -0.5f,   1.0f, 0.0f,    1.0f,  1.0f, -1.0f, // Donji desni ugao
-  // Gornji desni ugao
-                  -0.5f,  0.5f, -0.5f,   0.0f, 0.0f,   -1.0f,  1.0f, -1.0f,
-                           -0.5f,  0.5f,  0.5f,   0.0f, 1.0f,   -1.0f,  1.0f,  1.0f,  // Gornji levi ugao
+        -0.5f,  0.5f, -0.5f,   0.0f, 0.0f,   -1.0f,  1.0f, -1.0f,
 
-          0.5f,  0.5f,  0.5f,   1.0f, 1.0f,    1.0f,  1.0f,  1.0f, // Gornji desni ugao
-                 -0.5f,  0.5f, -0.5f,   0.0f, 0.0f,   -1.0f,  1.0f, -1.0f, // Donji levi ugao
+
+        -0.5f,  0.5f,  0.5f,   0.0f, 1.0f,   -1.0f,  1.0f,  1.0f,  // Gornji levi ugao
+         0.5f,  0.5f,  0.5f,   1.0f, 1.0f,    1.0f,  1.0f,  1.0f, // Gornji desni ugao
+        -0.5f,  0.5f, -0.5f,   0.0f, 0.0f,   -1.0f,  1.0f, -1.0f, // Donji levi ugao
 
     };
     vector<float> pecurka3d;
@@ -635,7 +735,7 @@ int main(void)
         3, 7, 6    // Drugi trougao
     };
 
-    //normale 
+    //da budu vise rastrkane
     float asdf = 3.0f;
 
     glm::vec3 cubePositions[] = {
@@ -651,6 +751,7 @@ int main(void)
         glm::vec3(5.5f,  0.5f -1.0f, 5.5f)* asdf
     };
 
+    //tmp da stoje na povrsini lepo jer asdf pomnozi y xd
     for (int i = 0; i < 10; i++) {
         cubePositions[i].y = 0.5f;
     }
@@ -775,6 +876,12 @@ int main(void)
         std::cout << "Tekstura ucitana uspesno!" << std::endl;
     }
     //glm::vec3 initialVelocity;
+    
+
+    initParticles(glm::vec3(0.0f, .8f, -11.f), cannonExplosionParticles, CANNON_EXPLOSION);
+    initParticles(glm::vec3(0.0f, 2.8f, -11.f), cannonSmokeParticles, CANNON_SMOKE);
+    setUpParticleSystem();
+
 
     // ++++++++++++++++++++++++++++++++++++++++++++++++++++++ RENDER PETLJA ++++++++++++++++++++++++++++++++++++++++++++++++++++++
     while (!glfwWindowShouldClose(window)) {
@@ -807,7 +914,34 @@ int main(void)
         //glBindVertexArray(VAO3d);
         //glDrawElements(GL_TRIANGLES, sizeof(indices3d) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
         //glBindVertexArray(0);
+        if (lastShotTime>0) {
 
+            if ((currentFrame - lastShotTime) <= 3.0f) {
+                renderParticles(particleShader, cannonExplosionParticles, CANNON_EXPLOSION);
+                updateParticles(deltaTime, cannonExplosionParticles, CANNON_EXPLOSION);
+            }
+
+            if ((currentFrame - lastShotTime) <= 4.0f) {
+                std::cout << "xdd";
+                renderParticles(particleShader, cannonSmokeParticles, CANNON_SMOKE);
+                updateParticles(deltaTime, cannonSmokeParticles, CANNON_SMOKE);
+                if ((currentFrame - lastShotTime) >= 2.5f) {
+                    shouldCreateNewSmokeParticles = false;
+                }
+            }
+            if ((currentFrame - startEmitImpact) <= 3.f) {
+                updateParticles(deltaTime, impactExplosionParticles, IMPACT);
+                renderParticles(particleShader, impactExplosionParticles, IMPACT);
+            }
+        }
+
+
+
+        
+        //IMPACT EXPLOPOSION RENDER I UPDATE
+
+
+        glUseProgram(triDTest);
 
 
 
@@ -887,10 +1021,10 @@ int main(void)
         std::vector<glm::vec3> cubePositionsNew;
 
         //visina pogleda locked
-       // camera.Position.y = 3.f;
+        //camera.Position.y = 3.f;
 
-        //cout << camera.Position.x << " " << camera.Position.y << " " << camera.Position.z << " " << camera.Yaw <<endl;
-        cout << camera.Front.x << " " << camera.Front.y << " " << camera.Front.z << endl;
+        std::cout << camera.Position.x << " " << camera.Position.y << " " << camera.Position.z << " " << camera.Yaw <<endl;
+        //std::cout << camera.Front.x << " " << camera.Front.y << " " << camera.Front.z << endl;
         cupolaAngle += 0.315f;
         //alpha = glm::radians(cupolaAngle);
         //for (int i = 0; i < sizeof(cubePositions) / sizeof(cubePositions[0]); ++i) {
@@ -959,6 +1093,8 @@ int main(void)
                     //    isBulletFlying = 0;
                     //}
                     if (projectiles[i].position.y <= 0.f) {
+                        initParticles(glm::vec3(projectiles[i].position.x, projectiles[i].position.y+.5f, projectiles[i].position.z), impactExplosionParticles, IMPACT);
+                        startEmitImpact = currentFrame;
                         projectiles[i].isFlying = false;
                         initialVelocity = glm::vec3(0.0f, 0.0f, 0.0f);
                     }
@@ -1180,6 +1316,8 @@ void updateReadyIndicator(float currentTime) {
 void shoot(float currentTime) {
     if (canShoot && ammo > 0) {
         ammo--;  // Smanji municiju
+        shouldCreateNewSmokeParticles = true;
+        initParticles(glm::vec3(0.0f, 2.8f, -11.f), cannonSmokeParticles, CANNON_SMOKE);
         lastShotTime = currentTime;
         std::cout << "Paljba!" << std::endl;
 
@@ -1999,4 +2137,188 @@ void calculateInitialVelocity() {
         10.f * sin(glm::radians(cannonRotationAngle)),
         0.0f)
         ;
+}
+
+
+//PARTICLES IMP
+void setUpParticleSystem() {
+    glGenVertexArrays(1, &VAOParticle);
+    glGenBuffers(1, &VBOParticle);
+
+    // Bind VAO
+    glBindVertexArray(VAOParticle);
+
+    // Bind VBO
+    glBindBuffer(GL_ARRAY_BUFFER, VBOParticle);
+    glBufferData(GL_ARRAY_BUFFER, particlesVertices.size() * sizeof(float), particlesVertices.data(), GL_STATIC_DRAW);
+
+
+    // Podesite atribute vrhova
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0); // Pozicije
+    glEnableVertexAttribArray(0);
+
+    // Unbind VAO
+    glBindVertexArray(0);
+}
+
+void initParticles(glm::vec3 particleEmitPosition, Particle particles[MAX_PARTICLES], PARTICLE_TYPE type) {
+    for (int i = 0; i < MAX_PARTICLES; ++i) {
+        particles[i].position = particleEmitPosition; // Pocetna pozicija
+        particles[i].velocity = glm::vec3(
+            ((float)rand() / RAND_MAX - 0.5f) * 10.0f, // Slucajna brzina na X
+            ((float)rand() / RAND_MAX) * 10.0f,        // Slucajna brzina na Y
+            ((float)rand() / RAND_MAX - 0.5f) * 10.0f  // Slucajna brzina na Z
+        );
+        if (type == CANNON_SMOKE) {
+            particles[i].lifetime =6.0f; // Trajanje do 5 sekundi
+            particles[i].lifetime = ((float)rand() / RAND_MAX) * 4.f;
+
+        }
+        else {
+            particles[i].lifetime = 3.f;
+        }
+        //(float)rand() / RAND_MAX * 5.0f; // Trajanje do 5 sekundi
+        particles[i].color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);  // Belo
+        particles[i].size = ((float)rand() / RAND_MAX)+0.1; // Random velicina (1.0 - 6.0)
+        particles[i].rotation = ((float)rand() / RAND_MAX) * glm::pi<float>() * 2.0f; // Random rotacija
+    }
+}
+
+void updateParticles(float deltaTime, Particle particles[MAX_PARTICLES], PARTICLE_TYPE type) {
+
+    for (int i = 0; i < MAX_PARTICLES; ++i) {
+        particles[i].lifetime -= deltaTime; // Smanji lifetime
+        if (particles[i].lifetime > 0.0f) {
+            particles[i].position += particles[i].velocity * deltaTime*0.25f; // Azuriraj poziciju
+            
+            particles[i].velocity.y -= 16.0f*deltaTime;
+
+
+            glm::vec4 startColor(1.0f, 1.0f, 0.8f, 1.0f);  // Svetlo zuta
+            glm::vec4 midColor(1.0f, 0.5f, 0.0f, 0.9f);   // Narandzasta
+            glm::vec4 endColor(0.3f, 0.3f, 0.3f, 0.5f);   // Tamno siva (dim)
+
+            if (type == CANNON_SMOKE) {
+                startColor = glm::vec4(0.35f, 0.35f, 0.35f, 1.0f);
+                midColor = glm::vec4(0.25f, 0.25f, 0.25f, 0.8f);
+                endColor = glm::vec4(0.05f, 0.05f, 0.05f, 0.7f);
+                particles[i].velocity.y += 16.0f * deltaTime * 1.5;
+            }
+            //glm::vec4 startColor(0.2f, 0.2f, 0.2f, 1.0f);  // Tamno siva (pocetak dima)
+            //glm::vec4 midColor(0.3f, 0.3f, 0.3f, 0.8f);    // Siva sa manjom transparentnoscu
+            //glm::vec4 endColor(0.1f, 0.1f, 0.1f, 0.5f);
+
+            if (type != CANNON_SMOKE) {
+                if (particles[i].lifetime > 1.5f) {
+                    particles[i].color = glm::mix(startColor, midColor, glm::clamp((3.0f - particles[i].lifetime), 0.0f, 1.0f));
+                }
+                else {
+                    particles[i].color = glm::mix(midColor, endColor, glm::clamp((1.5f - particles[i].lifetime), 0.0f, 1.0f));
+                }
+            }
+            else {
+                if (particles[i].lifetime > 2.5f) {
+                    particles[i].color = glm::mix(startColor, midColor, glm::clamp((5.f - particles[i].lifetime), 0.0f, 1.0f));
+                }
+                else {
+                    particles[i].color = glm::mix(midColor, endColor, glm::clamp((2.5f - particles[i].lifetime), 0.0f, 1.0f));
+                }
+            }
+
+
+            // Interpolacija boje na osnovu lifetime
+
+
+
+          //  particles[i].color = glm::mix(
+           //     glm::vec4(1.0f, 1.0f, 1.f, 1.0f), // Pocetna boja (bela)
+            //    glm::vec4(.5f, 0.0f, 0.0f, 0.7f), // Krajnja boja (crvena, sa alfa 0.7)
+           //     glm::clamp(1.f/particles[i].lifetime, .0f, 1.0f) // Normalizovani faktor
+            //);            //particles[i].color.a -= deltaTime * 0.2f; // Postepeno smanjuj providnost
+            //particles[i].color.a = particles[i].lifetime / 4.f;
+            //particles[i].rotation += deltaTime * 4.0f; // Rotacija
+            //particles[i].rotation += deltaTime; // Rotacija
+            particles[i].size = glm::max(0.0f, particles[i].size - deltaTime/4.f*particles[i].lifetime); // Smanji velicinu
+        }
+        else {
+            // Resetuj cesticu kada istekne
+            if (type == CANNON_EXPLOSION) {
+                particles[i].position = glm::vec3(.0f, .8f, -11.0f);
+                //particles[i].lifetime = 3.f;
+            }
+            if (type == CANNON_SMOKE) {
+                particles[i].position = glm::vec3(.0f, 2.8f, -11.0f);
+            }
+            particles[i].lifetime = 3.f;
+            
+            if (type == CANNON_SMOKE && shouldCreateNewSmokeParticles) {
+                //particles[i].lifetime = 6.0f; // Trajanje do 5 sekundi
+                particles[i].lifetime = ((float)rand() / RAND_MAX) * 4.f;
+            }
+            else if(type==CANNON_SMOKE){
+                particles[i].lifetime = 0.f;
+            }
+            particles[i].velocity = glm::vec3(
+                ((float)rand() / RAND_MAX - 0.5f) * 10.0f, // Slucajna brzina na X
+                ((float)rand() / RAND_MAX) * 10.0f,        // Slucajna brzina na Y
+                ((float)rand() / RAND_MAX - 0.5f) * 10.0f  // Slucajna brzina na Z
+            );
+            //particles[i].color = glm::vec4(1.0f, 1.0f, .0f, particles[i].lifetime/8.f);
+            particles[i].size = ((float)rand() / RAND_MAX) + 0.2; // Random velicina
+            particles[i].rotation = ((float)rand() / RAND_MAX) * glm::pi<float>() * 2.0f;
+        }
+    }
+}
+
+void renderParticles(int shader, Particle particles[MAX_PARTICLES], PARTICLE_TYPE type) {
+    glUseProgram(shader);
+    glBindVertexArray(VAOParticle);
+
+    int projLoc = glGetUniformLocation(shader, "projection");
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+    glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+    //triDTest.setMat4("projection", projection);
+
+
+
+    // camera/view transformation
+    int viewLoc = glGetUniformLocation(shader, "view");
+
+    glm::mat4 view = camera.GetViewMatrix();
+    //ourShader.setMat4("view", view);
+    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+
+
+    int particleColorLoc = glGetUniformLocation(shader, "particleColor");
+    int modelLoc = glGetUniformLocation(shader, "model");
+
+    glm::mat4 model = glm::mat4(1.0f);
+    glm::mat4 ones = glm::mat4(1.0f);
+    for (int i = 0; i < MAX_PARTICLES; ++i) {
+        if (particles[i].lifetime > 0.0f) {
+            // Postavi uniform promenljive za shader
+
+            model = ones;
+            if (type == CANNON_EXPLOSION) {
+                model = glm::translate(model, glm::vec3(0.f, 2.8f, 0.f));
+                model = glm::rotate(model, particles[i].rotation, glm::vec3(0.f, .0f, 1.f));
+            }
+
+            model = glm::translate(model, particles[i].position);
+            //model = glm::translate(model, glm::vec3(0.f, 1.f, 0.f));
+            if (type != CANNON_SMOKE) {
+                model = glm::scale(model, glm::vec3(particles[i].size / 5.f));
+            }
+            else {
+                model = glm::scale(model, glm::vec3(particles[i].size / 3.f));
+            }
+            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+
+
+            glUniform4fv(particleColorLoc, 1, glm::value_ptr(glm::vec4(particles[i].color)));
+            glDrawArrays(GL_TRIANGLES, 0, particlesVertices.size() / 3);
+        }
+    }
+    glBindVertexArray(0);
+    glUseProgram(0);
 }

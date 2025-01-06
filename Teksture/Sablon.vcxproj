@@ -157,6 +157,8 @@
     <None Include="packages.config" />
     <None Include="panorama.frag" />
     <None Include="panorama.vert" />
+    <None Include="particle.frag" />
+    <None Include="particle.vert" />
     <None Include="tankShader.frag" />
     <None Include="tankShader.vert" />
     <None Include="textShader.frag" />
