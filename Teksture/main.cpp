@@ -2327,12 +2327,39 @@ void renderParticles(int shader, Particle particles[MAX_PARTICLES], PARTICLE_TYP
             // Postavi uniform promenljive za shader
 
             model = ones;
+
+
+
             if (type == CANNON_EXPLOSION) {
+                model = glm::rotate(model, glm::radians(cannonRotationAngle), glm::vec3(1.0f, 0.0f, 0.0f));
+
+                if (cannonRotationAngle > 0)
+                    //model = glm::translate(model, glm::vec3(0.0f, -cannonRotationAngle/20.3f, -abs(cannonRotationAngle /29.9f)));
+                    model = glm::translate(model, glm::vec3(0.0f, -cannonRotationAngle / 18.5f, 0.));
+
+
+                else
+                    model = glm::translate(model, glm::vec3(0.0f, -cannonRotationAngle / 25.5f, -cannonRotationAngle / 14.5f));
+
                 model = glm::translate(model, glm::vec3(0.f, 2.8f, 0.f));
                 model = glm::rotate(model, particles[i].rotation, glm::vec3(0.f, .0f, 1.f));
+
             }
 
             model = glm::translate(model, particles[i].position);
+            if (type == CANNON_SMOKE) {
+                //model = glm::rotate(model, glm::radians(cannonRotationAngle), glm::vec3(1.0f, 0.0f, 0.0f));
+
+                //na gore hardcode :s
+                if (cannonRotationAngle > 0)
+                    //model = glm::translate(model, glm::vec3(0.0f, -cannonRotationAngle/20.3f, -abs(cannonRotationAngle /29.9f)));
+                    model = glm::translate(model, glm::vec3(0.0f, cannonRotationAngle / 8.3f, cannonRotationAngle / 12.9f));
+
+
+                else
+                    model = glm::translate(model, glm::vec3(0.0f, cannonRotationAngle / 6.3f, cannonRotationAngle / 8.3));
+
+            }
             //model = glm::translate(model, glm::vec3(0.f, 1.f, 0.f));
             if (type != CANNON_SMOKE) {
                 model = glm::scale(model, glm::vec3(particles[i].size / 5.f));
