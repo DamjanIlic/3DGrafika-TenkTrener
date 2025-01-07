@@ -267,7 +267,7 @@ bool isLookingOutside = false;
 
 //SVETLOST
 //Svetlost
-glm::vec3 lightPos0(0.0f, 25.0f, 0.0f);
+glm::vec3 lightPos0(0.0f, 55.0f, 0.0f);
 glm::vec3 moonLightPos(1.55f, 3.0f, -2.20f); //prozorcic tenka
 glm::vec3 lightBulbLightPos(0.0f, 3.45f, 0.6f);
 
@@ -310,6 +310,8 @@ void initTank();
 void drawTank(int tankShader, unsigned tankTexture);
 //1 za on, 0 off
 int isLightOn = 1;
+
+int isNightvisionOn = 0;
 glm::vec3 tankPos(0.0f, 0.0f, 0.0f);
 
 
@@ -579,6 +581,7 @@ int main(void)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f); // Tamna pozadina
+    glClearColor(0.05f, 0.05f, 0.2f, 1.0f);
     // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ TEKSTURE ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
     unsigned bulletG = loadImageToTexture("res/tank_bullet.png");
@@ -866,7 +869,7 @@ int main(void)
     //postavi svetlost na pecurke
     glUseProgram(triDTest);
 
-    glUniform3fv(glGetUniformLocation(triDTest, "lightPos0"), 1, glm::value_ptr(lightPos0));
+
 
     GLuint textureID = loadImageToTexture("res/box.png");
     if (textureID == 0) {
@@ -886,6 +889,8 @@ int main(void)
     // ++++++++++++++++++++++++++++++++++++++++++++++++++++++ RENDER PETLJA ++++++++++++++++++++++++++++++++++++++++++++++++++++++
     while (!glfwWindowShouldClose(window)) {
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        glClearColor(0.005f, 0.005f, 0.03f, 1.0f); //nocno nebo
+        //glClearColor(0.6, 0.9, 1., 1.f); //vajb
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
         glfwPollEvents();
 
@@ -965,6 +970,9 @@ int main(void)
         //ourShader.setMat4("view", view);
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 
+
+        glUniform1i(glGetUniformLocation(triDTest, "isNightVisionOn"), isNightvisionOn);
+        glUniform3fv(glGetUniformLocation(triDTest, "lightPos0"), 1, glm::value_ptr(lightPos0));
         //KOCKE
         glBindVertexArray(VAO3d);
         glActiveTexture(GL_TEXTURE0);
@@ -984,7 +992,9 @@ int main(void)
             model = glm::rotate(model, glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
             //angle += 2.0f;
             //model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.0f, 1.0f));
-            model = glm::translate(model, cubePositions[i]);
+            model = glm::translate(model, cubePositions[i]*2.f);
+            model = glm::scale(model, glm::vec3(5.0f, 5.0f, 5.0f));
+            //model = glm::translate(model, cubePositions[i]);
             //if (i == 0) {
             //    model = glm::translate(model, )
             //}
@@ -1012,6 +1022,7 @@ int main(void)
         glUniform1i(glGetUniformLocation(triDTest, "uTex"), 0);
         //cout << glGetUniformLocation(triDTest, "uTex") << endl;
         //vaoo
+        glUniform1f(glGetUniformLocation(triDTest, "time"), currentFrame);
 
 
 
@@ -1470,6 +1481,7 @@ void processInput(GLFWwindow* window)
     static bool isLPressed = false, isSpacePressed = false; //svetlo/pucanje
     static bool isXPressed = false, isZPressed = false; //scope related
     static bool isOPressed = false;
+    static bool isNPressed = false;
 
     //ugasi na escape
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -1540,6 +1552,22 @@ void processInput(GLFWwindow* window)
     }
     else {
         isLPressed = false;
+    }
+
+    //nightvision
+    if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS) {
+        if (!isNPressed) {
+            if (isNightvisionOn == 1) {
+                isNightvisionOn = 0;
+            }
+            else {
+                isNightvisionOn = 1;
+            }
+            isNPressed = true;
+        }
+    }
+    else {
+        isNPressed = false;
     }
     
     //pucanje

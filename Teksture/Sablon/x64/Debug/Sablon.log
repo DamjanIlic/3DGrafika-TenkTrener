@@ -1,18 +1,18 @@
 ﻿  main.cpp
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(992,61): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(1113,59): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(1274,18): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(1904,55): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(1955,32): warning C4018: '<': signed/unsigned mismatch
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(1982,61): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2032,57): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2123,57): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2182,55): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2205,62): warning C4244: '+=': conversion from 'double' to 'T', possible loss of data
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2205,62): warning C4244:         with
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2205,62): warning C4244:         [
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2205,62): warning C4244:             T=float
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2205,62): warning C4244:         ]
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2267,60): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2319,68): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(1002,61): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(1124,59): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(1285,18): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(1932,55): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(1983,32): warning C4018: '<': signed/unsigned mismatch
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2010,61): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2060,57): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2151,57): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2210,55): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2233,62): warning C4244: '+=': conversion from 'double' to 'T', possible loss of data
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2233,62): warning C4244:         with
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2233,62): warning C4244:         [
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2233,62): warning C4244:             T=float
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2233,62): warning C4244:         ]
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2295,60): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2347,68): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
   Sablon.vcxproj -> D:\Faks\Grafika\3D projekat\Teksture\x64\Debug\Sablon.exe
