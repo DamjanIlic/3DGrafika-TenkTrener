@@ -1073,8 +1073,12 @@ int main(void)
             //cout << i << endl;
             // calculate the model matrix for each object and pass it to shader before drawing
             glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
-            if (projectiles[i].isFired && !projectiles[i].isFlying) {
+            /*if (projectiles[i].isFired && !projectiles[i].isFlying) {
                 model = glm::rotate(model, glm::radians(-projectiles[i].angleFired+angle), glm::vec3(0.0f, 1.0f, 0.0f));
+
+            }*/
+            if (projectiles[i].isFired) {
+                model = glm::rotate(model, glm::radians(-projectiles[i].angleFired + angle), glm::vec3(0.0f, 1.0f, 0.0f));
 
             }
             else {
@@ -2328,7 +2332,9 @@ void renderParticles(int shader, Particle particles[MAX_PARTICLES], PARTICLE_TYP
 
             model = ones;
 
-
+            if (type == IMPACT) {
+                model = glm::rotate(model, glm::radians(-projectiles[9-ammo].angleFired + angle), glm::vec3(0.0f, 1.0f, 0.0f));
+            }
 
             if (type == CANNON_EXPLOSION) {
                 model = glm::rotate(model, glm::radians(cannonRotationAngle), glm::vec3(1.0f, 0.0f, 0.0f));
