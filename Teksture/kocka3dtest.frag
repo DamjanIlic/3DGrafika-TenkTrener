@@ -9,7 +9,11 @@ uniform vec3 lightPos0;
 uniform sampler2D uTex;
 
 uniform int isNightVisionOn;
+uniform int isSpotlightOn;
 uniform float time;
+
+uniform vec3 spotlightLightPos;
+uniform vec3 spotlightDir;
 
 
 void main() {
@@ -23,10 +27,15 @@ void main() {
     vec3 posToLightDirVec = normalize(lightPos0  -vs_position );
     vec3 diffuseColor = vec3(.075f, .075f, .075f); //noc 
     //vec3 diffuseColor = vec3(.25f, .25f, .25f); //vajb
-    if(isNightVisionOn == 1){
-       // diffuseColor *= 2.f;
-    }
+
     float diffuse = clamp(dot(posToLightDirVec, vs_normal), 0.0f, 1.0f);
+    if(isNightVisionOn == 1){
+       //ambientLight = vec3(0.035f, 0.035f, 0.035f);
+       // diffuseColor *= 2.f;
+      // diffuse *=2;
+    }
+
+
     vec3 diffuseFinal = diffuseColor * diffuse;
 
     //FragColor = vec4(0.9, 0.9, 0.9f, 1.0f)* (vec4(ambientLight, 1.0f) + vec4(diffuseFinal, 1.f));
@@ -38,6 +47,46 @@ void main() {
         //FragColor.y += .5f;
         FragColor = FragColor;  // Ako je tekstura validna, samo je koristimo
     }
+    
+    //REFLEKTORSKO
+    float cutoffAngle = radians(7.0);
+    float innerCutoffAngle = radians(3.5);
+    float distance = length(vs_position-spotlightLightPos);
+    vec3 posToSpotlightLightDirVec = normalize(vs_position - spotlightLightPos);
+    float cosTheta = dot(normalize(spotlightDir), posToSpotlightLightDirVec);
+    float theta = acos(cosTheta); // Ugao u radijanima
+    float spotlightDiffuse = 0.f;
+    if(theta<cutoffAngle){
+        //spotlightDiffuse =12.15f*(1./(distance*distance*distance))*(1/((theta+0.01)*(theta+0.01)));
+         //spotlightDiffuse =100.15f*(1./(distance*distance*distance))*(1/((theta+0.01)));
+
+    }
+    //if(theta<(cutoffAngle/2.)){
+    //    spotlightDiffuse = 1.;
+    //}
+    //else if((theta>(cutoffAngle/2.))&&(theta<cutoffAngle)){
+     //   spotlightDiffuse = .5;
+    //}
+
+    //gpt
+    float angleIntensity = smoothstep(cutoffAngle, innerCutoffAngle, theta);
+    // Slabljenje na osnovu udaljenosti
+    float constant = 1.0;
+    float linear = 0.09;
+    float quadratic = 0.032;
+    float distanceAttenuation = 1.0 / (constant + linear * distance + quadratic * distance * distance);
+
+    float spotlightIntensity = angleIntensity * distanceAttenuation;
+
+    
+    if(isSpotlightOn == 1){
+        FragColor = texture(uTex, chTex) * (vec4(ambientLight, 1.0f) + vec4(diffuseFinal, 1.f) + spotlightIntensity*15 *vec4(1f, 1f, 1f, 1.f));
+        //FragColor += spotlightIntensity*5 *vec4(1f, 1f, 1f, 1.f);
+    }
+
+
+
+
 
     //vec4 baseColor = FragColor;
    // float brightness = dot(FragColor.rgb, vec3(1.299, 1.587, 1.114)); // Luminance formula

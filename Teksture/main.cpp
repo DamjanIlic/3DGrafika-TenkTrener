@@ -312,6 +312,8 @@ void drawTank(int tankShader, unsigned tankTexture);
 int isLightOn = 1;
 
 int isNightvisionOn = 0;
+int isSpotlightOn = 0;
+
 glm::vec3 tankPos(0.0f, 0.0f, 0.0f);
 
 
@@ -781,10 +783,10 @@ int main(void)
     //tlo
     float groundVertices[] = {
         // Pozicije           // Teksturne koordinate
-        -150.0f, -0.0f, -150.0f,  0.0f, 0.0f,  -1.0f, 1.0f, -1.0f,// Levo dole
-         150.0f, -0.0f, -150.0f,  1.0f, 0.0f, 1.0f, 1.0f, -1.0f,// Desno dole
-         150.0f, -0.0f,  150.0f,  1.0f, 1.0f,  1.0f, 1.0f, 1.0f,// Desno gore
-        -150.0f, -0.0f,  150.0f,  0.0f, 1.0f,  -1.0f, 1.0f, 1.0f,// Levo gore
+        -1350.0f, -0.0f, -1350.0f,  0.0f, 0.0f,  -1.0f, 1.0f, -1.0f,// Levo dole
+         1350.0f, -0.0f, -1350.0f,  1.0f, 0.0f, 1.0f, 1.0f, -1.0f,// Desno dole
+         1350.0f, -0.0f,  1350.0f,  1.0f, 1.0f,  1.0f, 1.0f, 1.0f,// Desno gore
+        -1350.0f, -0.0f,  1350.0f,  0.0f, 1.0f,  -1.0f, 1.0f, 1.0f,// Levo gore
     };
 
     unsigned int groundIndices[] = {
@@ -951,7 +953,7 @@ int main(void)
 
 
         int projLoc = glGetUniformLocation(triDTest, "projection");
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 800.0f);
         glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
         //triDTest.setMat4("projection", projection);
 
@@ -972,7 +974,13 @@ int main(void)
 
 
         glUniform1i(glGetUniformLocation(triDTest, "isNightVisionOn"), isNightvisionOn);
+        glUniform1i(glGetUniformLocation(triDTest, "isSpotlightOn"), isSpotlightOn);
+
         glUniform3fv(glGetUniformLocation(triDTest, "lightPos0"), 1, glm::value_ptr(lightPos0));
+        glUniform3fv(glGetUniformLocation(triDTest, "spotlightLightPos"), 1, glm::value_ptr(scopeCameraPos+glm::vec3(0.f, 0.f, 0.f)));
+        glUniform3fv(glGetUniformLocation(triDTest, "spotlightDir"), 1, glm::value_ptr(glm::vec3(0.0f, -.11f, -1.0f)));
+
+        
         //KOCKE
         glBindVertexArray(VAO3d);
         glActiveTexture(GL_TEXTURE0);
@@ -1143,7 +1151,7 @@ int main(void)
         //glBindVertexArray(0);
 
         drawCannon(triDTest, tankG);
-        drawTank(tankShader, tankG);
+        //drawTank(tankShader, tankG);
 
 
 
@@ -1486,6 +1494,7 @@ void processInput(GLFWwindow* window)
     static bool isXPressed = false, isZPressed = false; //scope related
     static bool isOPressed = false;
     static bool isNPressed = false;
+    static bool isRPressed = false;
 
     //ugasi na escape
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -1572,6 +1581,22 @@ void processInput(GLFWwindow* window)
     }
     else {
         isNPressed = false;
+    }
+
+    //reflektor
+    if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
+        if (!isRPressed) {
+            if (isSpotlightOn == 1) {
+                isSpotlightOn = 0;
+            }
+            else {
+                isSpotlightOn = 1;
+            }
+            isRPressed = true;
+        }
+    }
+    else {
+        isRPressed = false;
     }
     
     //pucanje
