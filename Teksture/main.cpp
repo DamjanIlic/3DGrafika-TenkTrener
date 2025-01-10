@@ -54,11 +54,6 @@ double mapValue(double value, double minSource, double maxSource, double minTarg
 
 
 
-struct Target {
-    float x;
-    float targetOffset = 0.0f;
-    bool isAlive = true;
-};
 
 
 
@@ -275,7 +270,6 @@ glm::vec3 lightBulbLightPos(0.0f, 3.45f, 0.6f);
 float angle = 0.0f;
 
 
-//////////////////targets
 
 float randBetween(float min, float max) {
     return min + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (max - min)));
@@ -420,6 +414,29 @@ void shoot(float currentTime);
 
 Projectile projectiles[10];
 
+
+//METE
+unsigned int VAOTarget, VBOTarget;
+vector<float> targetVertices;
+const float TARGET_SCALE = 200.0f;
+void initTarget();
+void drawTargets(int tankShader, unsigned tankTexture);
+
+
+
+struct Target {
+    glm::vec3 position;
+    glm::vec3 worldPosition;
+    float hitboxRadius = 2.f;
+    bool isHit = false;
+};
+
+const int NUM_TARGETS = 10;
+
+Target targets[NUM_TARGETS];
+void initTargetPositions();
+glm::vec3 calculateWorldPositionForTarget(glm::vec3 position, glm::mat4 model);
+bool checkForHit(Projectile projectile, Target target);
 //CEV TENKA
 unsigned int VAOCannon, VBOCannon;
 vector<float> cannonVertices;
@@ -597,10 +614,14 @@ int main(void)
     unsigned backgroundG = loadImageToTexture("res/background.png");
     unsigned semaphoreONG = loadImageToTexture("res/semaphoreON.png");
     unsigned semaphoreOFFG = loadImageToTexture("res/semaphoreOFF.png");
-    unsigned aimG = loadImageToTexture("res/aim.png");
+    unsigned aimG = loadImageToTexture("res/aim2.png");
     unsigned dottedG = loadImageToTexture("res/dotted.png");
     unsigned xboxG = loadImageToTexture("res/box.png");
     unsigned tankG = loadImageToTexture("res/teksturaBoja.png");
+    unsigned int dragonG = loadImageToTexture("res/dragon.png");
+    unsigned csTargetG = loadImageToTexture("res/cstarget.png");
+    unsigned morhuhnG = loadImageToTexture("res/morhuhn.png");
+    unsigned colossalTitanG = loadImageToTexture("res/kolosal.png");
     // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ SEJDERI ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
     unsigned int unifiedShader = createShader("basic.vert", "basic.frag");
@@ -610,7 +631,8 @@ int main(void)
 
     //3d
     unsigned int triDTest = createShader("kocka3dtest.vert", "kocka3dtest.frag");
-    unsigned int particleShader = createShader("particle.vert", "particle.frag");
+    unsigned int particleShader = createShader("particle.vert", "particle.frag");\
+
 
 
     //Projectile projectiles[10];
@@ -864,6 +886,7 @@ int main(void)
     // Unbind VAO
     glBindVertexArray(0);
     initObjects();
+    initTargetPositions();
 
 
 
@@ -890,9 +913,9 @@ int main(void)
 
     // ++++++++++++++++++++++++++++++++++++++++++++++++++++++ RENDER PETLJA ++++++++++++++++++++++++++++++++++++++++++++++++++++++
     while (!glfwWindowShouldClose(window)) {
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        //glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClearColor(0.005f, 0.005f, 0.03f, 1.0f); //nocno nebo
-        //glClearColor(0.6, 0.9, 1., 1.f); //vajb
+        glClearColor(0.6, 0.9, 1., 1.f); //vajb
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
         glfwPollEvents();
 
@@ -929,7 +952,7 @@ int main(void)
             }
 
             if ((currentFrame - lastShotTime) <= 4.0f) {
-                std::cout << "xdd";
+                //std::cout << "xdd";
                 renderParticles(particleShader, cannonSmokeParticles, CANNON_SMOKE);
                 updateParticles(deltaTime, cannonSmokeParticles, CANNON_SMOKE);
                 if ((currentFrame - lastShotTime) >= 2.5f) {
@@ -982,9 +1005,10 @@ int main(void)
 
         
         //KOCKE
-        glBindVertexArray(VAO3d);
+        glBindVertexArray(VAOTarget);
+        //glBindVertexArray(VAOTarget);
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, xboxG);
+        glBindTexture(GL_TEXTURE_2D, colossalTitanG);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);  // Ili GL_NEAREST
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         //glBindTexture(GL_TEXTURE_2D, 0);
@@ -998,16 +1022,20 @@ int main(void)
             // calculate the model matrix for each object and pass it to shader before drawing
             glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
             model = glm::rotate(model, glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
+            
+            //update target world position
+            targets[i].worldPosition = calculateWorldPositionForTarget(targets[i].position, model);
             //angle += 2.0f;
             //model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.0f, 1.0f));
-            model = glm::translate(model, cubePositions[i]*2.f);
-            model = glm::scale(model, glm::vec3(5.0f, 5.0f, 5.0f));
+            model = glm::translate(model, targets[i].position);
+            //model = glm::scale(model, glm::vec3(5.0f, 5.0f, 5.0f));
+
             //model = glm::translate(model, cubePositions[i]);
             //if (i == 0) {
             //    model = glm::translate(model, )
             //}
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-            glDrawArrays(GL_TRIANGLES, 0, vertices3d.size() / 8);
+            glDrawArrays(GL_TRIANGLES, 0, targetVertices.size() / 8);
             //glDrawElements(GL_TRIANGLES, sizeof(indices3d) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
             //glDrawArrays(GL_TRIANGLES, 0, 36);
         }
@@ -1020,6 +1048,7 @@ int main(void)
         // render PECURKE (bombe?XD)
         //textura 
         glBindVertexArray(VAOPecurka);
+        glBindVertexArray(0);
         glActiveTexture(GL_TEXTURE0);
 
         //glBindTexture(GL_TEXTURE_2D, xboxG);
@@ -1042,7 +1071,9 @@ int main(void)
         //visina pogleda locked
         //camera.Position.y = 3.f;
 
-        std::cout << camera.Position.x << " " << camera.Position.y << " " << camera.Position.z << " " << camera.Yaw <<endl;
+        //ATM COUT
+        std::cout << camera.Yaw << " " << camera.Pitch << endl;
+        //std::cout << camera.Position.x << " " << camera.Position.y << " " << camera.Position.z << " " /*<< camera.Yaw*/  << endl;
         //std::cout << camera.Front.x << " " << camera.Front.y << " " << camera.Front.z << endl;
         cupolaAngle += 0.315f;
         //alpha = glm::radians(cupolaAngle);
@@ -1076,6 +1107,8 @@ int main(void)
 
         //}
 
+        //biznis
+
         for (unsigned int i = 0; i < 10; i++)
         {
             //cout << i << endl;
@@ -1108,14 +1141,33 @@ int main(void)
                 if (projectiles[i].isFlying) {
                     projectiles[i].position.z -= initialVelocity.x * deltaTime;
                     projectiles[i].position.y += initialVelocity.y * deltaTime - 0.5f * 10.f * deltaTime * deltaTime;
-                    initialVelocity.y -= 2.f * deltaTime;
+                    initialVelocity.y -= 10.f * deltaTime;
                     //if (bombaPositions[10 - ammo-1].y < 0.) {
                     //    initialVelocity = glm::vec3(0.f, 0.f, 0.f);
                     //   // cubePositions.ad
                     //    bombaPositions[10 - ammo] = scopeCameraPos; // sledecu stavi na mesto
                     //    isBulletFlying = 0;
                     //}
-                    if (projectiles[i].position.y <= 0.f) {
+                    // fix: proveri prvo hit pa onda pomeri poziciju za toliko.
+                    //std::cout << projectiles[i].position.x << " " << projectiles[i].position.y << " " << projectiles[i].position.z << endl;
+                    for (int j = 0; j < NUM_TARGETS; j++) {
+                        //check for hit
+
+                        //if (glm::distance(projectiles[i].position, targets[j].worldPosition) < 4.f) {
+                        if(checkForHit(projectiles[i], targets[j])){
+                            initParticles(glm::vec3(projectiles[i].position.x, projectiles[i].position.y + .5f, projectiles[i].position.z+1.5f), impactExplosionParticles, IMPACT);
+                            startEmitImpact = currentFrame;
+                            projectiles[i].isFlying = false;
+                            initialVelocity = glm::vec3(0.0f, 0.0f, 0.0f);
+
+                            //ATM COUT 
+                            //std::cout << "HIT TARGET: " << j << endl;
+                            //std::cout << "Distance: " << glm::distance(projectiles[i].position, targets[j].position) << endl;
+                            //std::cout << "Target pos: "  << targets[j].position.x << " " << targets[j].position.y << " " << targets[j].position.z << endl;
+                        }
+                    }
+
+                    if (projectiles[i].position.y <= 0.f && projectiles[i].isFlying) {
                         initParticles(glm::vec3(projectiles[i].position.x, projectiles[i].position.y+.5f, projectiles[i].position.z), impactExplosionParticles, IMPACT);
                         startEmitImpact = currentFrame;
                         projectiles[i].isFlying = false;
@@ -1151,9 +1203,12 @@ int main(void)
         //glBindVertexArray(0);
 
         drawCannon(triDTest, tankG);
-        //drawTank(tankShader, tankG);
+        drawTank(tankShader, tankG);
 
 
+        double moveCrossUpDown = mapValue(cannonRotationAngle, -22.5, 22.5, -1, 1.0);
+        //drawtxt(unifiedShader, -.05f, .05f, -.05f+moveCrossUpDown, .05f+ moveCrossUpDown, aimG);
+        drawtxt(unifiedShader, -.05f, .05f, -.05f, .05f, aimG);
 
       /*  glBindVertexArray(vaotest);
         glDrawElements(GL_TRIANGLES, sizeof(indices3d) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
@@ -1328,8 +1383,15 @@ void shootBullet(unsigned int shaderProgram) {
 }
 
 void updateReadyIndicator(float currentTime) {
-    if (ammo > 0 && (currentTime - lastShotTime) >= cooldown && !isBulletFlying) {
+    if (ammo > 0 && (currentTime - lastShotTime) >= (cooldown+3.0f) && !isBulletFlying) {
         canShoot = true;
+        for (int i = 0; i < 10; i++) {
+            if (projectiles[i].isFlying) {
+                projectiles[i].isFlying = false;
+                initialVelocity = glm::vec3(0.0f, 0.0f, 0.0f);
+            }
+
+        }
     }
     else {
         canShoot = false;
@@ -1534,12 +1596,21 @@ void processInput(GLFWwindow* window)
     //temp pomeranje cevi
     //if (isZoomedIn) {
         if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS) {
-            if(cannonRotationAngle!=22.5)
-                cannonRotationAngle += .5;
+            if(cannonRotationAngle<22.5f)
+                cannonRotationAngle += .05f;
+            if (isZoomedIn) {
+                camera.Pitch = cannonRotationAngle;
+                camera.ProcessMouseMovement(0, 0);
+            }
+
         }
         if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) {
-            if(cannonRotationAngle != -13.5)
-                cannonRotationAngle -= .5;
+            if(cannonRotationAngle > -13.5f)
+                cannonRotationAngle -= .05f;
+            if (isZoomedIn) {
+                camera.Pitch = cannonRotationAngle;
+                camera.ProcessMouseMovement(0, 0);
+            }
         }
 
     //}
@@ -1549,7 +1620,7 @@ void processInput(GLFWwindow* window)
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
         angle -= 1.0f;
     if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
-        angle += 1.0f;
+        angle += 1.0f-0.9;
 
     //svetlo paljenje/gasenje unutar tenka
     if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) {
@@ -1628,6 +1699,7 @@ void processInput(GLFWwindow* window)
                 camera.AdjustZoom(zoomLevel); //zapamti zoom prethodni
             }
             else {
+                camera.Pitch = 0.f;
                 camera.Position = scopeInsideTankPos;
                 camera.AdjustZoom(0.0f);    //odzumiraj 
                 camera.ProcessMouseMovement(-270.0f,-75.0f); //zaokreni pogled ka scope
@@ -1647,7 +1719,9 @@ void processInput(GLFWwindow* window)
     if (isZoomedIn) { //is Scoped in bolje 
         if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) {
             if (!isXPressed) {
-                 zoomLevel += 1.0f;
+                zoomLevel += 1.0f;
+                camera.Pitch = cannonRotationAngle;
+                camera.ProcessMouseMovement(0, 0);
                 if (zoomLevel == 3.0f)
                     zoomLevel = 0.0f;
                 camera.AdjustZoom(zoomLevel); //0, 1, 2 x scopes
@@ -1863,6 +1937,7 @@ void initObjects() {
     initBullet();
     initWindow();
     initCannon();
+    initTarget();
 }
 
 void initPecurka() {
@@ -1928,7 +2003,7 @@ void drawTank(int tankShader, unsigned tankTexture) {
     glUniform1i(glGetUniformLocation(tankShader, "isDrawingWindow"), 0);
     //projekcione matrice
     int projLoc = glGetUniformLocation(tankShader, "projection");
-    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 2500.0f);
     glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
     // camera/view transformation
@@ -2127,7 +2202,7 @@ void drawCannon(int cannonShader, unsigned tankTexture) {
 
     glUniform3fv(glGetUniformLocation(cannonShader, "lightPos0"), 1, glm::value_ptr(lightPos0));
     int projLoc = glGetUniformLocation(cannonShader, "projection");
-    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 2500.0f);
     glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
 
@@ -2187,13 +2262,43 @@ void drawCannon(int cannonShader, unsigned tankTexture) {
 
 }
 
+void initTarget() {
+    //test3 zmaj pog:o
+    loadObject("res/kolosal.obj", targetVertices, TARGET_SCALE);
+    glGenVertexArrays(1, &VAOTarget);
+    glGenBuffers(1, &VBOTarget);
+
+    // Bind VAO
+    glBindVertexArray(VAOTarget);
+
+    // Bind VBO
+    glBindBuffer(GL_ARRAY_BUFFER, VBOTarget);
+    glBufferData(GL_ARRAY_BUFFER, targetVertices.size() * sizeof(float), targetVertices.data(), GL_STATIC_DRAW);
+
+
+    // Podesite atribute vrhova
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0); // Pozicije
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float))); // Teksture
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float))); // Normale
+    glEnableVertexAttribArray(2);
+
+    // Unbind VAO
+    glBindVertexArray(0);
+
+}
+
+
+
 
 void calculateInitialVelocity() {
     initialVelocity = glm::vec3(
-        10.f * cos(glm::radians(cannonRotationAngle)),
-        10.f * sin(glm::radians(cannonRotationAngle)),
+        500.f * cos(glm::radians(cannonRotationAngle)),
+        500.f * sin(glm::radians(cannonRotationAngle)),
         0.0f)
         ;
+    cout << 10.f * cos(glm::radians(cannonRotationAngle)) << " " << 10.f * sin(glm::radians(cannonRotationAngle)) << endl;
 }
 
 
@@ -2332,7 +2437,7 @@ void renderParticles(int shader, Particle particles[MAX_PARTICLES], PARTICLE_TYP
     glBindVertexArray(VAOParticle);
 
     int projLoc = glGetUniformLocation(shader, "projection");
-    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f,2500.0f);
     glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
     //triDTest.setMat4("projection", projection);
 
@@ -2392,8 +2497,11 @@ void renderParticles(int shader, Particle particles[MAX_PARTICLES], PARTICLE_TYP
 
             }
             //model = glm::translate(model, glm::vec3(0.f, 1.f, 0.f));
-            if (type != CANNON_SMOKE) {
+            if (type == CANNON_EXPLOSION) {
                 model = glm::scale(model, glm::vec3(particles[i].size / 5.f));
+            }
+            else if (type == IMPACT) {
+                model = glm::scale(model, glm::vec3(particles[i].size));
             }
             else {
                 model = glm::scale(model, glm::vec3(particles[i].size / 3.f));
@@ -2407,4 +2515,63 @@ void renderParticles(int shader, Particle particles[MAX_PARTICLES], PARTICLE_TYP
     }
     glBindVertexArray(0);
     glUseProgram(0);
+}
+
+void initTargetPositions() {
+    //tmp
+    float asdf = -25.0f;
+
+    glm::vec3 cubePositions[] = {
+        glm::vec3(35.0f,  0.f, -7.0f) * asdf,
+        glm::vec3(0.0f,  0.f, -7.0f) * asdf,
+        glm::vec3(-7.5f, 0.f, -23.5f) * asdf,
+        glm::vec3(-0.3f, 0.f, -14.3f) * asdf,
+        glm::vec3(12.4f, 0.f, -31.5f) * asdf,
+        glm::vec3(-6.7f,  0.f, -55.5f) * asdf,
+        glm::vec3(9.3f, 0.f, -12.5f) * asdf,
+        glm::vec3(11.5f,  0.f, -2.5f) * asdf,
+        glm::vec3(5.5f,  0.f, -122.5f) * asdf,
+        glm::vec3(5.5f,  0.f, -5.5f) * asdf
+    };
+
+    //tmp da stoje na povrsini lepo jer asdf pomnozi y xd
+    for (int i = 0; i < 10; i++) {
+        cubePositions[i].y = 0.f;
+    }
+
+    for (int i = 0; i < NUM_TARGETS; i++) {
+        targets[i].position = cubePositions[i];
+        std::cout << targets[i].position.x << " " << targets[i].position.y << " " << targets[i].position.z << endl;
+    }
+}
+
+glm::vec3 calculateWorldPositionForTarget(glm::vec3 position, glm::mat4 model) {
+    glm::vec4 transformedPos = model * glm::vec4(position, 1.0f);
+    return glm::vec3(transformedPos);
+}
+
+bool checkForHit(Projectile projectile, Target target) {
+    if (!(abs(projectile.position.x - target.worldPosition.x) < 5.f)) {
+        return false;
+    }
+    if (!(abs(projectile.position.z - target.worldPosition.z) < 5.f)) {
+        return false;
+    }
+    //too low
+    if (projectile.position.y < 7 * TARGET_SCALE / 50.f) {
+        return false;
+    }
+    else if (projectile.position.y > 8 * TARGET_SCALE / 50.f) {
+        return false;
+    }
+    //ako je iznad ramena stanji x/z xitbox 
+    else if (projectile.position.y > 7.2 * TARGET_SCALE / 50.f) {
+        if (!(abs(projectile.position.x - target.worldPosition.x) < 2.f)) {
+            return false;
+        }
+        if (!(abs(projectile.position.z - target.worldPosition.z) < 2.f)) {
+            return false;
+        }
+    }
+    return true;
 }

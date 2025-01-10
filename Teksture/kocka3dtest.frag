@@ -19,14 +19,14 @@ uniform vec3 spotlightDir;
 void main() {
 
     //AmbientLight
-    vec3 ambientLight = vec3(0.01f, 0.01f, 0.01f); //noc
-    //vec3 ambientLight = vec3(0.225f, 0.225f, 0.225f); //vajb
+    //vec3 ambientLight = vec3(0.02f, 0.02f, 0.02f); //noc
+    vec3 ambientLight = vec3(0.225f, 0.225f, 0.225f); //vajb
     
     //vs_normal = normalize(vs_normal);
     //Diffuse 
     vec3 posToLightDirVec = normalize(lightPos0  -vs_position );
-    vec3 diffuseColor = vec3(.075f, .075f, .075f); //noc 
-    //vec3 diffuseColor = vec3(.25f, .25f, .25f); //vajb
+    //vec3 diffuseColor = vec3(.075f, .075f, .075f); //noc 
+    vec3 diffuseColor = vec3(.25f, .25f, .25f); //vajb
 
     float diffuse = clamp(dot(posToLightDirVec, vs_normal), 0.0f, 1.0f);
     if(isNightVisionOn == 1){
@@ -101,6 +101,7 @@ void main() {
         noise = (noise - 0.5) * 0.1; // Skaliranje noisa
 
         FragColor.rgb = nightVisionColor + vec3(noise);
+
     }
     //FragColor = baseColor;
     // Dodaj noise efekat
