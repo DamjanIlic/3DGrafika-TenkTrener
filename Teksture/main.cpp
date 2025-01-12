@@ -1695,6 +1695,9 @@ void processInput(GLFWwindow* window)
                 camera.Position = scopeCameraPos;
                 camera.Yaw = -90.0f; // gledaj pravo
                 camera.Pitch = 0.0f;
+                if(cannonRotationAngle != 0.f){
+                    camera.Pitch = cannonRotationAngle;
+                }
                 camera.ProcessMouseMovement(0, 0); //pravo
                 camera.AdjustZoom(zoomLevel); //zapamti zoom prethodni
             }

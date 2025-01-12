@@ -5,17 +5,17 @@ D:\Faks\Grafika\3D projekat\Teksture\main.cpp(1038,65): warning C4267: 'argument
 D:\Faks\Grafika\3D projekat\Teksture\main.cpp(1188,59): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
 D:\Faks\Grafika\3D projekat\Teksture\main.cpp(1352,18): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
 D:\Faks\Grafika\3D projekat\Teksture\main.cpp(1623,22): warning C4305: '+=': truncation from 'double' to 'float'
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2036,55): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2087,32): warning C4018: '<': signed/unsigned mismatch
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2114,61): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2164,57): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2255,57): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2344,55): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2367,62): warning C4244: '+=': conversion from 'double' to 'T', possible loss of data
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2367,62): warning C4244:         with
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2367,62): warning C4244:         [
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2367,62): warning C4244:             T=float
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2367,62): warning C4244:         ]
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2429,60): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2513,68): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2039,55): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2090,32): warning C4018: '<': signed/unsigned mismatch
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2117,61): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2167,57): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2258,57): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2347,55): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2370,62): warning C4244: '+=': conversion from 'double' to 'T', possible loss of data
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2370,62): warning C4244:         with
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2370,62): warning C4244:         [
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2370,62): warning C4244:             T=float
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2370,62): warning C4244:         ]
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2432,60): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+D:\Faks\Grafika\3D projekat\Teksture\main.cpp(2516,68): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
   Sablon.vcxproj -> D:\Faks\Grafika\3D projekat\Teksture\x64\Debug\Sablon.exe
