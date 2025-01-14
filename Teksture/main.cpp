@@ -17,6 +17,9 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <map>
 
+#define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
 
 #include <glm/gtc/type_ptr.hpp>
 #include "Camera.h"
@@ -413,6 +416,16 @@ struct Projectile {
 void shoot(float currentTime);
 
 Projectile projectiles[10];
+
+// brutfors it is :s
+struct WalkAnimation {
+    unsigned int VAOTarget= 0;
+    unsigned int VBOTarget= 0;
+    vector<float> targetVertices;
+};
+
+WalkAnimation walkAnimationFrames[24];
+
 
 
 //METE
@@ -976,7 +989,7 @@ int main(void)
 
 
         int projLoc = glGetUniformLocation(triDTest, "projection");
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 800.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 1800.0f);
         glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
         //triDTest.setMat4("projection", projection);
 
@@ -1005,7 +1018,9 @@ int main(void)
 
         
         //KOCKE
-        glBindVertexArray(VAOTarget);
+        int xd = static_cast<int>(currentFrame * 24 * 0.5) % 24;
+
+        glBindVertexArray(walkAnimationFrames[xd].VAOTarget);
         //glBindVertexArray(VAOTarget);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, colossalTitanG);
@@ -1023,7 +1038,7 @@ int main(void)
             glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
             model = glm::rotate(model, glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
             
-            //update target world position
+            //update target world position 
             targets[i].worldPosition = calculateWorldPositionForTarget(targets[i].position, model);
             //angle += 2.0f;
             //model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.0f, 1.0f));
@@ -1035,9 +1050,11 @@ int main(void)
             //    model = glm::translate(model, )
             //}
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-            glDrawArrays(GL_TRIANGLES, 0, targetVertices.size() / 8);
+            glDrawArrays(GL_TRIANGLES, 0, walkAnimationFrames[0].targetVertices.size() / 8);
             //glDrawElements(GL_TRIANGLES, sizeof(indices3d) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
             //glDrawArrays(GL_TRIANGLES, 0, 36);
+        
+            targets[i].position.z +=  0.05f;
         }
 
 
@@ -1072,8 +1089,8 @@ int main(void)
         //camera.Position.y = 3.f;
 
         //ATM COUT
-        std::cout << camera.Yaw << " " << camera.Pitch << endl;
-        //std::cout << camera.Position.x << " " << camera.Position.y << " " << camera.Position.z << " " /*<< camera.Yaw*/  << endl;
+       // std::cout << camera.Yaw << " " << camera.Pitch << endl;
+        std::cout << camera.Position.x << " " << camera.Position.y << " " << camera.Position.z << " " /*<< camera.Yaw*/  << endl;
         //std::cout << camera.Front.x << " " << camera.Front.y << " " << camera.Front.z << endl;
         cupolaAngle += 0.315f;
         //alpha = glm::radians(cupolaAngle);
@@ -1845,7 +1862,7 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 //                                                                                  OBJEKTI
 //loaduje objekat iz .obj fajla, popuni prosledjeni vektor sa vertices x,y,z, v, u, xn, yn, zn (koordinate, tekstura, normala)
 //objectScale velicina objekta , xyz*objectScale/10
-void loadObject(const string& filePath, vector<float>&output, float objectScale) {
+/*void loadObject(const string& filePath, vector<float>& output, float objectScale) {
     std::vector<float> vertexData; //  sve verteks koordinate
     std::vector<float> textureData; //  sve teksturne koordinate
     std::vector<float> normalData; //  sve normale
@@ -1932,7 +1949,194 @@ void loadObject(const string& filePath, vector<float>&output, float objectScale)
         output.push_back(normalData[nIndex * 3 + 2]);
     }
     //cout << output.size() / 8;
+    std::cout << "Uspesno ucitan fajl" << filePath << endl;
 }
+*/
+/*void loadObject(const std::string& filePath, std::vector<float>& output, float objectScale) {
+    std::vector<float> vertexData;    // Verteks koordinate
+    std::vector<float> textureData;  // Teksturne koordinate
+    std::vector<float> normalData;   // Normale
+
+    std::ifstream file(filePath);
+    if (!file.is_open()) {
+        std::cerr << "Unable to open file: " << filePath << std::endl;
+        return;
+    }
+
+    std::string line;
+    output.clear(); // Očistimo vektor izlaza za slučaj da već ima podataka
+
+    while (std::getline(file, line)) {
+        std::istringstream lineStream(line);
+        std::string prefix;
+        lineStream >> prefix;
+
+        if (prefix == "v") {
+            // Verteks koordinate
+            float x, y, z;
+            lineStream >> x >> y >> z;
+            vertexData.push_back(x * (objectScale / 10.0f));
+            vertexData.push_back(y * (objectScale / 10.0f));
+            vertexData.push_back(z * (objectScale / 10.0f));
+        }
+        else if (prefix == "vt") {
+            // Teksturne koordinate
+            float u, v;
+            lineStream >> u >> v;
+            textureData.push_back(u);
+            textureData.push_back(v);
+        }
+        else if (prefix == "vn") {
+            // Normale
+            float nx, ny, nz;
+            lineStream >> nx >> ny >> nz;
+            normalData.push_back(nx);
+            normalData.push_back(ny);
+            normalData.push_back(nz);
+        }
+        else if (prefix == "f") {
+            // Faces (poligoni)
+            for (int i = 0; i < 3; ++i) { // Pretpostavka: face su triangulovane
+                std::string vertexInfo;
+                lineStream >> vertexInfo;
+
+                // Zamena '/' sa razmakom
+                std::replace(vertexInfo.begin(), vertexInfo.end(), '/', ' ');
+                std::istringstream vertexStream(vertexInfo);
+
+                int vIndex, tIndex, nIndex;
+                vertexStream >> vIndex >> tIndex >> nIndex;
+
+                // Dodaj verteks koordinate
+                output.push_back(vertexData[(vIndex - 1) * 3]);
+                output.push_back(vertexData[(vIndex - 1) * 3 + 1]);
+                output.push_back(vertexData[(vIndex - 1) * 3 + 2]);
+
+                // Dodaj teksturne koordinate
+                output.push_back(textureData[(tIndex - 1) * 2]);
+                output.push_back(textureData[(tIndex - 1) * 2 + 1]);
+
+                // Dodaj normale
+                output.push_back(normalData[(nIndex - 1) * 3]);
+                output.push_back(normalData[(nIndex - 1) * 3 + 1]);
+                output.push_back(normalData[(nIndex - 1) * 3 + 2]);
+            }
+        }
+    }
+    file.close();
+    std::cout << "Successfully loaded file: " << filePath << " with "
+        << output.size() / 8 << " vertices." << std::endl;
+}*/
+void convertObjToBinary(const std::string& objPath, const std::string& binPath, float objectScale) {
+    std::ifstream file(objPath);
+    if (!file.is_open()) {
+        std::cerr << "Unable to open OBJ file: " << objPath << std::endl;
+        return;
+    }
+
+    std::vector<float> vertexData;
+    std::vector<float> textureData;
+    std::vector<float> normalData;
+    std::vector<float> finalData;
+
+    std::string line;
+    while (std::getline(file, line)) {
+        std::istringstream lineStream(line);
+        std::string prefix;
+        lineStream >> prefix;
+
+        if (prefix == "v") {
+            float x, y, z;
+            lineStream >> x >> y >> z;
+            vertexData.push_back(x * (objectScale / 10.0f));
+            vertexData.push_back(y * (objectScale / 10.0f));
+            vertexData.push_back(z * (objectScale / 10.0f));
+        }
+        else if (prefix == "vt") {
+            float u, v;
+            lineStream >> u >> v;
+            textureData.push_back(u);
+            textureData.push_back(v);
+        }
+        else if (prefix == "vn") {
+            float nx, ny, nz;
+            lineStream >> nx >> ny >> nz;
+            normalData.push_back(nx);
+            normalData.push_back(ny);
+            normalData.push_back(nz);
+        }
+        else if (prefix == "f") {
+            for (int i = 0; i < 3; ++i) { // Triangulovane face
+                std::string vertexInfo;
+                lineStream >> vertexInfo;
+
+                std::replace(vertexInfo.begin(), vertexInfo.end(), '/', ' ');
+                std::istringstream vertexStream(vertexInfo);
+
+                int vIndex, tIndex, nIndex;
+                vertexStream >> vIndex >> tIndex >> nIndex;
+
+                // Dodaj verteks koordinate
+                finalData.push_back(vertexData[(vIndex - 1) * 3]);
+                finalData.push_back(vertexData[(vIndex - 1) * 3 + 1]);
+                finalData.push_back(vertexData[(vIndex - 1) * 3 + 2]);
+
+                // Dodaj teksturne koordinate
+                finalData.push_back(textureData[(tIndex - 1) * 2]);
+                finalData.push_back(textureData[(tIndex - 1) * 2 + 1]);
+
+                // Dodaj normale
+                finalData.push_back(normalData[(nIndex - 1) * 3]);
+                finalData.push_back(normalData[(nIndex - 1) * 3 + 1]);
+                finalData.push_back(normalData[(nIndex - 1) * 3 + 2]);
+            }
+        }
+    }
+
+    file.close();
+
+    std::ofstream binFile(binPath, std::ios::binary);
+    if (!binFile.is_open()) {
+        std::cerr << "Unable to open BIN file: " << binPath << std::endl;
+        return;
+    }
+
+    size_t dataSize = finalData.size();
+    binFile.write(reinterpret_cast<const char*>(&dataSize), sizeof(size_t));
+    binFile.write(reinterpret_cast<const char*>(finalData.data()), dataSize * sizeof(float));
+
+    binFile.close();
+    std::cout << "Converted OBJ to BIN: " << binPath << std::endl;
+}
+
+void loadBinaryObject(const std::string& binPath, std::vector<float>& output) {
+    std::ifstream binFile(binPath, std::ios::binary);
+    if (!binFile.is_open()) {
+        std::cerr << "Unable to open BIN file: " << binPath << std::endl;
+        return;
+    }
+
+    size_t dataSize;
+    binFile.read(reinterpret_cast<char*>(&dataSize), sizeof(size_t));
+    output.resize(dataSize);
+    binFile.read(reinterpret_cast<char*>(output.data()), dataSize * sizeof(float));
+
+    binFile.close();
+    std::cout << "Successfully loaded binary file: " << binPath << " with "
+        << dataSize / 8 << " vertices." << std::endl; // 8 floats po verteksu
+}
+
+void loadObject(const std::string& objPath, std::vector<float>& output, float objectScale) {
+    std::string binPath = objPath + ".bin";
+
+    if (!fs::exists(binPath)) {
+        std::cout << "Binary file not found. Converting OBJ to BIN..." << std::endl;
+        convertObjToBinary(objPath, binPath, objectScale);
+    }
+
+    loadBinaryObject(binPath, output);
+}
+
 
 void initObjects() {
     initPecurka();
@@ -2267,28 +2471,38 @@ void drawCannon(int cannonShader, unsigned tankTexture) {
 
 void initTarget() {
     //test3 zmaj pog:o
-    loadObject("res/kolosal.obj", targetVertices, TARGET_SCALE);
-    glGenVertexArrays(1, &VAOTarget);
-    glGenBuffers(1, &VBOTarget);
+    //std::vector<std::string> fileNames;
 
-    // Bind VAO
-    glBindVertexArray(VAOTarget);
+    // Kreiranje stringova za fajlove
+    for (int i = 0; i < 24; i++) {
+        std::stringstream ss;
+        ss << "res/colossalWalk/" << i+1 << ".obj";
+        //fileNames.push_back(ss.str());  // Dodajemo string u vektor
+        std::string fileName = ss.str();
 
-    // Bind VBO
-    glBindBuffer(GL_ARRAY_BUFFER, VBOTarget);
-    glBufferData(GL_ARRAY_BUFFER, targetVertices.size() * sizeof(float), targetVertices.data(), GL_STATIC_DRAW);
+        loadObject(fileName, walkAnimationFrames[i].targetVertices, TARGET_SCALE);
+        glGenVertexArrays(1, &walkAnimationFrames[i].VAOTarget);
+        glGenBuffers(1, &walkAnimationFrames[i].VBOTarget);
+
+        // Bind VAO
+        glBindVertexArray(walkAnimationFrames[i].VAOTarget);
+
+        // Bind VBO
+        glBindBuffer(GL_ARRAY_BUFFER, walkAnimationFrames[i].VBOTarget);
+        glBufferData(GL_ARRAY_BUFFER, walkAnimationFrames[i].targetVertices.size() * sizeof(float), walkAnimationFrames[i].targetVertices.data(), GL_STATIC_DRAW);
 
 
-    // Podesite atribute vrhova
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0); // Pozicije
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float))); // Teksture
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float))); // Normale
-    glEnableVertexAttribArray(2);
+        // Podesite atribute vrhova
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0); // Pozicije
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float))); // Teksture
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float))); // Normale
+        glEnableVertexAttribArray(2);
 
-    // Unbind VAO
-    glBindVertexArray(0);
+        // Unbind VAO
+        glBindVertexArray(0);
+    }
 
 }
 

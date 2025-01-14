@@ -1,2 +1,21 @@
 # Visual Studio privremeni fajlovi
 .vs/
+.vscode/
+.idea/
+
+# Build direktorijumi
+bin/
+obj/
+
+# PDB fajlovi (privremeni fajlovi za debagovanje)
+Teksture/x64/Debug/Sablon.pdb
+
+# Fajlovi sistema
+Thumbs.db
+ehthumbs.db
+
+# Fajlovi koje git treba da ignoriše
+*.log
+*.user
+*.suo
+*.userosscache
