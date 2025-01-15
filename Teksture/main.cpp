@@ -291,18 +291,18 @@ void drawRectangle(float x1, float x2, float y1, float y2, int shaderProgram, fl
 
 
 //                                                  OBJEKTI INIT
-void loadObject(const string& filePath, vector<float>&outputVertices, float objectScale);
+void loadObject(const string& filePath, vector<float>&outputVertices);
 void initObjects();
-
+const float FACTOR = 10.0f;
 //PECURKA
 unsigned int VAOPecurka, VBOPecurka;
-const float PECURKA_SCALE = .5f;
+const float PECURKA_SCALE = .5f/FACTOR;
 void initPecurka();
 
 //TENK
 unsigned int VAOTank, VBOTank;
 vector<float> tankVertices;
-const float TANK_SCALE = 1.0f;
+const float TANK_SCALE = 5.0f/FACTOR;
 void initTank();
 void drawTank(int tankShader, unsigned tankTexture);
 //1 za on, 0 off
@@ -385,7 +385,7 @@ vector<float> windowVertices = {
 //METAK
 unsigned int VAOBullet, VBOBullet;
 vector<float> bulletVertices;
-const float BULLET_SCALE = 4.5f;
+const float BULLET_SCALE = 4.5f/FACTOR;
 void initBullet();
 void drawBullet(int bulletShader, unsigned bulletTexture);
 glm::vec3 bulletPositions[] = {
@@ -431,7 +431,7 @@ WalkAnimation walkAnimationFrames[24];
 //METE
 unsigned int VAOTarget, VBOTarget;
 vector<float> targetVertices;
-const float TARGET_SCALE = 200.0f;
+const float TARGET_SCALE = 250.0f/FACTOR;
 void initTarget();
 void drawTargets(int tankShader, unsigned tankTexture);
 
@@ -453,7 +453,7 @@ bool checkForHit(Projectile projectile, Target target);
 //CEV TENKA
 unsigned int VAOCannon, VBOCannon;
 vector<float> cannonVertices;
-const float CANNON_SCALE = 5.0f;
+const float CANNON_SCALE = TANK_SCALE;
 float cannonRotationAngle = 0.0f;
 void initCannon();
 void drawCannon(int cannonShader, unsigned cannonTexture);
@@ -746,7 +746,7 @@ int main(void)
 
     };
     vector<float> pecurka3d;
-    loadObject("res/PECURKA.obj", pecurka3d, PECURKA_SCALE);
+    loadObject("res/PECURKA.obj", pecurka3d);
     //vertices3d = pecurka3d;
 
     unsigned int indices3d[] = {
@@ -1020,7 +1020,7 @@ int main(void)
         //KOCKE
         int xd = static_cast<int>(currentFrame * 24 * 0.5) % 24;
 
-        glBindVertexArray(walkAnimationFrames[xd].VAOTarget);
+        glBindVertexArray(walkAnimationFrames[0].VAOTarget);
         //glBindVertexArray(VAOTarget);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, colossalTitanG);
@@ -1044,7 +1044,7 @@ int main(void)
             //model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.0f, 1.0f));
             model = glm::translate(model, targets[i].position);
             //model = glm::scale(model, glm::vec3(5.0f, 5.0f, 5.0f));
-
+            model = glm::scale(model, glm::vec3(TARGET_SCALE));
             //model = glm::translate(model, cubePositions[i]);
             //if (i == 0) {
             //    model = glm::translate(model, )
@@ -1054,7 +1054,7 @@ int main(void)
             //glDrawElements(GL_TRIANGLES, sizeof(indices3d) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
             //glDrawArrays(GL_TRIANGLES, 0, 36);
         
-            targets[i].position.z +=  0.05f;
+            //targets[i].position.z +=  0.05f;
         }
 
 
@@ -2027,7 +2027,7 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
     std::cout << "Successfully loaded file: " << filePath << " with "
         << output.size() / 8 << " vertices." << std::endl;
 }*/
-void convertObjToBinary(const std::string& objPath, const std::string& binPath, float objectScale) {
+void convertObjToBinary(const std::string& objPath, const std::string& binPath) {
     std::ifstream file(objPath);
     if (!file.is_open()) {
         std::cerr << "Unable to open OBJ file: " << objPath << std::endl;
@@ -2048,9 +2048,9 @@ void convertObjToBinary(const std::string& objPath, const std::string& binPath, 
         if (prefix == "v") {
             float x, y, z;
             lineStream >> x >> y >> z;
-            vertexData.push_back(x * (objectScale / 10.0f));
-            vertexData.push_back(y * (objectScale / 10.0f));
-            vertexData.push_back(z * (objectScale / 10.0f));
+            vertexData.push_back(x);
+            vertexData.push_back(y);
+            vertexData.push_back(z);
         }
         else if (prefix == "vt") {
             float u, v;
@@ -2126,12 +2126,12 @@ void loadBinaryObject(const std::string& binPath, std::vector<float>& output) {
         << dataSize / 8 << " vertices." << std::endl; // 8 floats po verteksu
 }
 
-void loadObject(const std::string& objPath, std::vector<float>& output, float objectScale) {
+void loadObject(const std::string& objPath, std::vector<float>& output) {
     std::string binPath = objPath + ".bin";
 
     if (!fs::exists(binPath)) {
         std::cout << "Binary file not found. Converting OBJ to BIN..." << std::endl;
-        convertObjToBinary(objPath, binPath, objectScale);
+        convertObjToBinary(objPath, binPath);
     }
 
     loadBinaryObject(binPath, output);
@@ -2149,7 +2149,7 @@ void initObjects() {
 
 void initPecurka() {
     vector<float> pecurka3d;
-    loadObject("res/PECURKA.obj", pecurka3d, PECURKA_SCALE);
+    loadObject("res/PECURKA.obj", pecurka3d);
     glGenVertexArrays(1, &VAOPecurka);
     glGenBuffers(1, &VBOPecurka);
 
@@ -2174,7 +2174,7 @@ void initPecurka() {
 }
 
 void initTank() {
-    loadObject("res/tnk2.obj", tankVertices, TANK_SCALE*5.0f);
+    loadObject("res/tnk2.obj", tankVertices);
     glGenVertexArrays(1, &VAOTank);
     glGenBuffers(1, &VBOTank);
 
@@ -2222,6 +2222,7 @@ void drawTank(int tankShader, unsigned tankTexture) {
     glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
     model = glm::rotate(model, glm::radians(0.0f), glm::vec3(1.0f, 0.3f, 0.5f));
     //model = glm::translate(model, camera.Position);
+    model = glm::scale(model, glm::vec3(TANK_SCALE));
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
     
     // render bullets
@@ -2255,7 +2256,7 @@ void drawTank(int tankShader, unsigned tankTexture) {
 
 
 void initBullet() {
-    loadObject("res/blt3.obj", bulletVertices, BULLET_SCALE);
+    loadObject("res/blt3.obj", bulletVertices);
     glGenVertexArrays(1, &VAOBullet);
     glGenBuffers(1, &VBOBullet);
     // Bind VAO
@@ -2312,7 +2313,7 @@ void drawBullet(int bulletShader, unsigned bulletTexture) {
         else {
 
         }
-
+        model = scale(model, glm::vec3(BULLET_SCALE));
 
         //float angle = 20.0f * i;
         //model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
@@ -2377,7 +2378,7 @@ void drawWindow(int tankShader, unsigned tankTexture) {
 }
 
 void initCannon() {
-    loadObject("res/cev2.obj", cannonVertices, CANNON_SCALE);
+    loadObject("res/cev2.obj", cannonVertices);
     glGenVertexArrays(1, &VAOCannon);
     glGenBuffers(1, &VBOCannon);
     // Bind VAO
@@ -2439,7 +2440,7 @@ void drawCannon(int cannonShader, unsigned tankTexture) {
     
     else
     model = glm::translate(model, glm::vec3(0.0f, -cannonRotationAngle / 28.9f, -cannonRotationAngle/17.3));
-
+    model = glm::scale(model, glm::vec3(CANNON_SCALE));
     //cout << cannonRotationAngle << endl;
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
     // render boxes
@@ -2480,7 +2481,7 @@ void initTarget() {
         //fileNames.push_back(ss.str());  // Dodajemo string u vektor
         std::string fileName = ss.str();
 
-        loadObject(fileName, walkAnimationFrames[i].targetVertices, TARGET_SCALE);
+        loadObject(fileName, walkAnimationFrames[i].targetVertices);
         glGenVertexArrays(1, &walkAnimationFrames[i].VAOTarget);
         glGenBuffers(1, &walkAnimationFrames[i].VBOTarget);
 
@@ -2767,6 +2768,7 @@ glm::vec3 calculateWorldPositionForTarget(glm::vec3 position, glm::mat4 model) {
     return glm::vec3(transformedPos);
 }
 
+//atm samo nape hitbox
 bool checkForHit(Projectile projectile, Target target) {
     if (!(abs(projectile.position.x - target.worldPosition.x) < 5.f)) {
         return false;
@@ -2775,18 +2777,18 @@ bool checkForHit(Projectile projectile, Target target) {
         return false;
     }
     //too low
-    if (projectile.position.y < 7 * TARGET_SCALE / 50.f) {
+    if (projectile.position.y < 7.2 * TARGET_SCALE / 5.f) {
         return false;
     }
-    else if (projectile.position.y > 8 * TARGET_SCALE / 50.f) {
+    else if (projectile.position.y > 7.7 * TARGET_SCALE / 5.f) {
         return false;
     }
     //ako je iznad ramena stanji x/z xitbox 
-    else if (projectile.position.y > 7.2 * TARGET_SCALE / 50.f) {
+    else if (projectile.position.y > 7.2 * TARGET_SCALE / 5.f) {
         if (!(abs(projectile.position.x - target.worldPosition.x) < 2.f)) {
             return false;
         }
-        if (!(abs(projectile.position.z - target.worldPosition.z) < 2.f)) {
+        if (!(abs(projectile.position.z - target.worldPosition.z) < 1.5f)) {
             return false;
         }
     }
