@@ -440,8 +440,8 @@ void drawTargets(int tankShader, unsigned tankTexture);
 struct Target {
     glm::vec3 position;
     glm::vec3 worldPosition;
-    float hitboxRadius = 2.f;
-    bool isHit = false;
+    bool isAlive = true;
+    float timeDied = 0.0f;
 };
 
 const int NUM_TARGETS = 10;
@@ -449,7 +449,7 @@ const int NUM_TARGETS = 10;
 Target targets[NUM_TARGETS];
 void initTargetPositions();
 glm::vec3 calculateWorldPositionForTarget(glm::vec3 position, glm::mat4 model);
-bool checkForHit(Projectile projectile, Target target);
+bool checkForHit(Projectile projectile, Target &target);
 //CEV TENKA
 unsigned int VAOCannon, VBOCannon;
 vector<float> cannonVertices;
@@ -989,7 +989,7 @@ int main(void)
 
 
         int projLoc = glGetUniformLocation(triDTest, "projection");
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 1800.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 5800.0f);
         glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
         //triDTest.setMat4("projection", projection);
 
@@ -1020,7 +1020,7 @@ int main(void)
         //KOCKE
         int xd = static_cast<int>(currentFrame * 24 * 0.5) % 24;
 
-        glBindVertexArray(walkAnimationFrames[0].VAOTarget);
+        glBindVertexArray(walkAnimationFrames[xd].VAOTarget);
         //glBindVertexArray(VAOTarget);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, colossalTitanG);
@@ -1050,11 +1050,12 @@ int main(void)
             //    model = glm::translate(model, )
             //}
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-            glDrawArrays(GL_TRIANGLES, 0, walkAnimationFrames[0].targetVertices.size() / 8);
+            if(targets[i].isAlive)
+            glDrawArrays(GL_TRIANGLES, 0, walkAnimationFrames[xd].targetVertices.size() / 8);
             //glDrawElements(GL_TRIANGLES, sizeof(indices3d) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
             //glDrawArrays(GL_TRIANGLES, 0, 36);
         
-            //targets[i].position.z +=  0.05f;
+            targets[i].position.z +=  0.05f;
         }
 
 
@@ -1090,7 +1091,7 @@ int main(void)
 
         //ATM COUT
        // std::cout << camera.Yaw << " " << camera.Pitch << endl;
-        std::cout << camera.Position.x << " " << camera.Position.y << " " << camera.Position.z << " " /*<< camera.Yaw*/  << endl;
+        //std::cout << camera.Position.x << " " << camera.Position.y << " " << camera.Position.z << " " /*<< camera.Yaw*/  << endl;
         //std::cout << camera.Front.x << " " << camera.Front.y << " " << camera.Front.z << endl;
         cupolaAngle += 0.315f;
         //alpha = glm::radians(cupolaAngle);
@@ -1156,9 +1157,12 @@ int main(void)
                 {
                 }
                 if (projectiles[i].isFlying) {
+
+
                     projectiles[i].position.z -= initialVelocity.x * deltaTime;
                     projectiles[i].position.y += initialVelocity.y * deltaTime - 0.5f * 10.f * deltaTime * deltaTime;
                     initialVelocity.y -= 10.f * deltaTime;
+
                     //if (bombaPositions[10 - ammo-1].y < 0.) {
                     //    initialVelocity = glm::vec3(0.f, 0.f, 0.f);
                     //   // cubePositions.ad
@@ -1190,6 +1194,7 @@ int main(void)
                         projectiles[i].isFlying = false;
                         initialVelocity = glm::vec3(0.0f, 0.0f, 0.0f);
                     }
+
                 }
 
             }
@@ -1609,7 +1614,31 @@ void processInput(GLFWwindow* window)
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
             camera.ProcessKeyboard(RIGHT, deltaTime);
     }
+    //if (isZoomedIn) {
+    //    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+    //        camera.ProcessKeyboard(FORWARD, deltaTime);
+    //        tankPos.z += 12.5 * deltaTime;
+    //    }
+    //    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+    //        camera.ProcessKeyboard(BACKWARD, deltaTime);
+    //    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+    //        camera.ProcessKeyboard(LEFT, deltaTime);
+    //    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    //        camera.ProcessKeyboard(RIGHT, deltaTime);
 
+
+    //    
+    //}
+    //voznja test
+    //if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS)
+    //    tankPos.z += 12.5 * deltaTime;
+    //if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS)
+    //    tankPos.z -= 12.5 * deltaTime;
+    if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) {
+        for (int i = 0; i < NUM_TARGETS; i++) {
+            targets[i].position.z -= 22.5 * deltaTime;
+        }
+    }
     //temp pomeranje cevi
     //if (isZoomedIn) {
         if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS) {
@@ -2222,6 +2251,7 @@ void drawTank(int tankShader, unsigned tankTexture) {
     glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
     model = glm::rotate(model, glm::radians(0.0f), glm::vec3(1.0f, 0.3f, 0.5f));
     //model = glm::translate(model, camera.Position);
+    model = glm::translate(model, -tankPos);
     model = glm::scale(model, glm::vec3(TANK_SCALE));
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
     
@@ -2768,29 +2798,88 @@ glm::vec3 calculateWorldPositionForTarget(glm::vec3 position, glm::mat4 model) {
     return glm::vec3(transformedPos);
 }
 
-//atm samo nape hitbox
-bool checkForHit(Projectile projectile, Target target) {
-    if (!(abs(projectile.position.x - target.worldPosition.x) < 5.f)) {
+
+bool checkForHit(Projectile projectile, Target &target) {
+    //if (!(abs(projectile.position.x - target.worldPosition.x) < 5.f)) {
+    //    return false;
+    //}
+    //if (!(abs(projectile.position.z - target.worldPosition.z) < 5.f)) {
+    //    return false;
+    //}
+    bool ret = false;
+    if (!target.isAlive) {
         return false;
     }
-    if (!(abs(projectile.position.z - target.worldPosition.z) < 5.f)) {
-        return false;
+    //torso
+    if ((projectile.position.y > 4 * TARGET_SCALE / 5) && (projectile.position.y < 7.6 * TARGET_SCALE / 5)) {
+        if ((abs(projectile.position.x - target.worldPosition.x) < 1.6 * TARGET_SCALE / 5)) {
+            if ((abs(projectile.position.z - target.worldPosition.z) < .6 * TARGET_SCALE / 5)) {
+                //target.isAlive = false;
+                cout << "torso" << endl;
+                ret = true;
+            }
+        }
+    }
+
+    //noge
+    if ((projectile.position.y < 4 * TARGET_SCALE / 5)) {
+        /*if ((abs(projectile.position.x - target.worldPosition.x) < 1.2 * TARGET_SCALE / 5)) {
+            if ((abs(projectile.position.z - target.worldPosition.z) < 1 * TARGET_SCALE / 5)) {
+                target.isAlive = false;
+                ret = true;
+            }
+        }*/
+        //razmak izmedju nogu iskljucen
+        if ((abs(projectile.position.x - target.worldPosition.x) > 0.3 * TARGET_SCALE / 5) &&
+            (abs(projectile.position.x - target.worldPosition.x) < 1.2 * TARGET_SCALE / 5)) {
+            if ((abs(projectile.position.z - target.worldPosition.z) < 1 * TARGET_SCALE / 5)) {
+                //target.isAlive = false;
+                ret = true;
+                cout << "noge" << endl;
+            }
+        }
     }
     //too low
-    if (projectile.position.y < 7.2 * TARGET_SCALE / 5.f) {
+    /*if (projectile.position.y < 7.2 * TARGET_SCALE / 5.f) {
         return false;
     }
     else if (projectile.position.y > 7.7 * TARGET_SCALE / 5.f) {
         return false;
-    }
+    }*/
     //ako je iznad ramena stanji x/z xitbox 
-    else if (projectile.position.y > 7.2 * TARGET_SCALE / 5.f) {
-        if (!(abs(projectile.position.x - target.worldPosition.x) < 2.f)) {
-            return false;
-        }
-        if (!(abs(projectile.position.z - target.worldPosition.z) < 1.5f)) {
-            return false;
+    //nape
+    if ((projectile.position.y > 7.15 * TARGET_SCALE / 5.f) && (projectile.position.y < 7.8 * TARGET_SCALE / 5.f)) {
+        if ((abs(projectile.position.x - target.worldPosition.x) < .9 * TARGET_SCALE / 5)) {
+            if ((abs(projectile.position.z - target.worldPosition.z) < .5 * TARGET_SCALE / 5)) {
+                
+                if (target.isAlive) {
+                    target.isAlive = false;
+                    cout << "nape" << endl;
+                    ret = true;
+                }
+
+            }
         }
     }
-    return true;
+    //glava
+    if ((projectile.position.y >= 7.8 * TARGET_SCALE / 5.f) && (projectile.position.y < 8.4 * TARGET_SCALE / 5.f)) {
+        if ((abs(projectile.position.x - target.worldPosition.x) < .6 * TARGET_SCALE / 5)) {
+            if ((abs(projectile.position.z - target.worldPosition.z) < .8 * TARGET_SCALE / 5)) {
+
+                if (target.isAlive) {
+                    //target.isAlive = false;
+                    cout << "glava" << endl;
+                    ret = true;
+                }
+
+            }
+        }
+    }
+    if (ret) {
+        cout << endl << "POGODJENA META NA POZICIJI: " << target.position.x << ", " << target.position.y << ", " << target.position.z << endl;
+        cout << endl << "PROJEKTIL  POZICIJI: " << projectile.position.x << ", " << projectile.position.y << ", " << projectile.position.z << endl;
+
+    }
+
+    return ret;
 }
