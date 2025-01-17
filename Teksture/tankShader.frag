@@ -10,6 +10,7 @@ uniform vec3 lightBulbLightPos;
 
 uniform int isLightOn;
 uniform int isDrawingWindow;
+uniform int isDrawingWall;
 
 uniform sampler2D uTex;
 
@@ -26,6 +27,9 @@ void main() {
     
     if(isDrawingWindow == 1){
         posToLightDirVec = normalize(vec3(0.0f, 25.0f, 0.0f - vs_position));
+    }
+    if(isDrawingWall == 1){
+            posToLightDirVec = normalize(vec3(0.0f, 25.0f, 0.0f - vs_position));
     }
     vec3 diffuseColor = vec3(.25f, .25f, .25f);
     float diffuse = clamp(dot(posToLightDirVec, vs_normal), 0.0f, 1.0f);
