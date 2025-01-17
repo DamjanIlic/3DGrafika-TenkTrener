@@ -235,9 +235,9 @@ float lastFrame = 0.0f;
 
 
 
-void calculateInitialVelocity();
-bool isBulletFlying = false;
-glm::vec3 initialVelocity = glm::vec3(0.0f, 0.0f, 0.0f);
+glm::vec3 calculateInitialVelocity();
+//bool isBulletFlying = false;
+
 
 
 //Kamera
@@ -416,15 +416,25 @@ glm::vec3 bulletPositions[] = {
 
 struct Projectile {
     glm::vec3 position = scopeCameraPos;
-    float angleFired;
-    bool isFlying;
-    bool isFired;
+    float angleFired = 0;
+    bool isFlying = false;
+    bool isFired = false; 
+    glm::vec3 initialVelocity = glm::vec3(0.0f, 0.0f, 0.0f);
+
+    Projectile(float anglefired, glm::vec3 initialVelocity) {
+        this->angleFired = anglefired;
+        this->initialVelocity = initialVelocity;
+        isFlying = true;
+        isFired = true;
+    }
 };
+vector<Projectile> projectiles;
+int projectilesFired = 0;
 
 
 void shoot(float currentTime);
 
-Projectile projectiles[10];
+
 
 // brutfors it is :s
 struct WalkAnimation {
@@ -1140,7 +1150,7 @@ int main(void)
 
         //biznis
 
-        for (unsigned int i = 0; i < 10; i++)
+        for (unsigned int i = 0; i < projectilesFired; i++)
         {
             //cout << i << endl;
             // calculate the model matrix for each object and pass it to shader before drawing
@@ -1172,9 +1182,9 @@ int main(void)
                 if (projectiles[i].isFlying) {
 
 
-                    projectiles[i].position.z -= initialVelocity.x * deltaTime;
-                    projectiles[i].position.y += initialVelocity.y * deltaTime - 0.5f * 10.f * deltaTime * deltaTime;
-                    initialVelocity.y -= 10.f * deltaTime;
+                    projectiles[i].position.z -= projectiles[i].initialVelocity.x * deltaTime;
+                    projectiles[i].position.y += projectiles[i].initialVelocity.y * deltaTime - 0.5f * 10.f * deltaTime * deltaTime;
+                    projectiles[i].initialVelocity.y -= 10.f * deltaTime;
 
                     //if (bombaPositions[10 - ammo-1].y < 0.) {
                     //    initialVelocity = glm::vec3(0.f, 0.f, 0.f);
@@ -1192,7 +1202,7 @@ int main(void)
                             initParticles(glm::vec3(projectiles[i].position.x, projectiles[i].position.y + .5f, projectiles[i].position.z), impactExplosionParticles, IMPACT);
                             startEmitImpact = currentFrame;
                             projectiles[i].isFlying = false;
-                            initialVelocity = glm::vec3(0.0f, 0.0f, 0.0f);
+                            projectiles[i].initialVelocity = glm::vec3(0.0f, 0.0f, 0.0f);
 
                             //ATM COUT 
                             //std::cout << "HIT TARGET: " << j << endl;
@@ -1205,7 +1215,7 @@ int main(void)
                         initParticles(glm::vec3(projectiles[i].position.x, projectiles[i].position.y+.5f, projectiles[i].position.z), impactExplosionParticles, IMPACT);
                         startEmitImpact = currentFrame;
                         projectiles[i].isFlying = false;
-                        initialVelocity = glm::vec3(0.0f, 0.0f, 0.0f);
+                        //projectiles[i].initialVelocity = glm::vec3(0.0f, 0.0f, 0.0f);
                     }
 
                 }
@@ -1444,15 +1454,15 @@ void shootBullet(unsigned int shaderProgram) {
 }
 
 void updateReadyIndicator(float currentTime) {
-    if (ammo > 0 && (currentTime - lastShotTime) >= (cooldown+3.0f) && !isBulletFlying) {
+    if (ammo > 0 &&  ((currentTime - lastShotTime) >= (cooldown+3.0f))) {
         canShoot = true;
-        for (int i = 0; i < 10; i++) {
-            if (projectiles[i].isFlying) {
-                projectiles[i].isFlying = false;
-                initialVelocity = glm::vec3(0.0f, 0.0f, 0.0f);
-            }
+        //for (int i = 0; i < 10; i++) {
+        //    if (projectiles[i].isFlying) {
+        //        projectiles[i].isFlying = false;
+        //        //initialVelocity = glm::vec3(0.0f, 0.0f, 0.0f);
+        //    }
 
-        }
+        //}
     }
     else {
         canShoot = false;
@@ -1465,14 +1475,9 @@ void shoot(float currentTime) {
         shouldCreateNewSmokeParticles = true;
         initParticles(glm::vec3(0.0f, 2.8f, -11.f), cannonSmokeParticles, CANNON_SMOKE);
         lastShotTime = currentTime;
-        std::cout << "Paljba!" << std::endl;
-
-        if (initialVelocity == glm::vec3(0.0f, 0.0f, 0.0f))
-            calculateInitialVelocity();
-        
-        projectiles[9 - ammo].angleFired = angle;
-        projectiles[9 - ammo].isFired = true;
-        projectiles[9 - ammo].isFlying = true;
+        //std::cout << "Paljba!" << std::endl;
+        projectiles.push_back(Projectile(angle, calculateInitialVelocity()));
+        projectilesFired++;
 
 
         //for (auto it = targets.begin(); it != targets.end(); ) {
@@ -1805,6 +1810,7 @@ void processInput(GLFWwindow* window)
     }
     //zumiranje
     if (isZoomedIn) { //is Scoped in bolje 
+        //povecaj zoom
         if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) {
             if (!isXPressed) {
                 zoomLevel += 1.0f;
@@ -1820,6 +1826,30 @@ void processInput(GLFWwindow* window)
         else {
             isXPressed = false;
         }
+
+        //nisanjenje kad zumiras
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+            angle -= 1.0f;
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+            angle += 1.0f - 0.9;
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+            if (cannonRotationAngle < 22.5f)
+                cannonRotationAngle += .05f;
+            if (isZoomedIn) {
+                camera.Pitch = cannonRotationAngle;
+                camera.ProcessMouseMovement(0, 0);
+            }
+
+        }
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+            if (cannonRotationAngle > -13.5f)
+                cannonRotationAngle -= .05f;
+            if (isZoomedIn) {
+                camera.Pitch = cannonRotationAngle;
+                camera.ProcessMouseMovement(0, 0);
+            }
+        }
+
     }
 
 
@@ -2433,8 +2463,10 @@ void drawBullet(int bulletShader, unsigned bulletTexture) {
     glUniform1i(glGetUniformLocation(bulletShader, "uTex"), 0);
 
     //glBindVertexArray(VAOBullet);
-
-    for (unsigned int i = 0; i < ammo; i++)
+    int bulletDrawCount = 0;
+    if (ammo > 10) bulletDrawCount = 10;
+    else bulletDrawCount = ammo;
+    for (unsigned int i = 0; i < bulletDrawCount; i++)
     {
         int modelLoc = glGetUniformLocation(bulletShader, "model");
         // calculate the model matrix for each object and pass it to shader before drawing
@@ -2652,13 +2684,13 @@ void initTarget() {
 
 
 
-void calculateInitialVelocity() {
-    initialVelocity = glm::vec3(
+glm::vec3 calculateInitialVelocity() {
+    return glm::vec3(
         500.f * cos(glm::radians(cannonRotationAngle)),
         500.f * sin(glm::radians(cannonRotationAngle)),
         0.0f)
         ;
-    cout << 10.f * cos(glm::radians(cannonRotationAngle)) << " " << 10.f * sin(glm::radians(cannonRotationAngle)) << endl;
+    //cout << 10.f * cos(glm::radians(cannonRotationAngle)) << " " << 10.f * sin(glm::radians(cannonRotationAngle)) << endl;
 }
 
 
@@ -2823,7 +2855,7 @@ void renderParticles(int shader, Particle particles[MAX_PARTICLES], PARTICLE_TYP
             model = ones;
 
             if (type == IMPACT) {
-                model = glm::rotate(model, glm::radians(-projectiles[9-ammo].angleFired + angle), glm::vec3(0.0f, 1.0f, 0.0f));
+                model = glm::rotate(model, glm::radians(-projectiles[projectilesFired-1].angleFired + angle), glm::vec3(0.0f, 1.0f, 0.0f));
             }
 
             if (type == CANNON_EXPLOSION) {
@@ -2966,6 +2998,7 @@ bool checkForHit(Projectile projectile, Target &target) {
                 
                 if (target.isAlive) {
                     target.isAlive = false;
+                    ammo += 3;
                     cout << "nape" << endl;
                     ret = true;
                 }
