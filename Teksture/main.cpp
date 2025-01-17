@@ -208,8 +208,7 @@ int ammo = 10;
 bool canShoot = true;
 const float cooldown = 1.5f;
 float lastShotTime = -cooldown;     //moze odmah da puca
-float voltage = 75.0f;
-float hydraulic = 0.0f;
+
 bool toggleMode = true;
 float offset = 0.0f; //za panoramu
 float targetOffset = 0.0f;
@@ -228,6 +227,9 @@ float cameraPosX = 0.0f, cameraPosY = 1.0f, cameraPosZ = 3.0f;
 float cameraSpeed = 0.1f; // Brzina pomeranja kamere
 float yaw = -90.0f, pitch = 0.0f; // Za rotaciju kamere
 
+//hidraulika
+float hydraulic = 0.0f;
+float voltage = 45.f;
 
 // timing
 float deltaTime = 0.0f;	// time between current frame and last frame
@@ -312,7 +314,7 @@ int isNightvisionOn = 0;
 int isSpotlightOn = 0;
 
 glm::vec3 tankPos(0.0f, 0.0f, 0.0f);
-
+float tankMovedForward = 0.f;
 
 
 //ZID
@@ -322,7 +324,12 @@ const float WALL_SCALE =7.5f / FACTOR;
 void initWall();
 void drawWall(int wallShader, unsigned wallTexture);
 
-
+//Drvece
+unsigned int VAOTrees, VBOTrees;
+vector<float> treesVertices;
+const float TREES_SCALE = 5.f / FACTOR;
+void initTrees();
+void drawTrees(int treesShader, unsigned treesTexture);
 
 //Prozorcic
 unsigned int VAOWindow, VBOWindow;
@@ -656,6 +663,7 @@ int main(void)
     unsigned colossalTitanG = loadImageToTexture("res/kolosal.png");
     unsigned terrainG = loadImageToTexture("res/terrain.png");
     unsigned wallG = loadImageToTexture("res/aotwall.png");
+    unsigned treesG = loadImageToTexture("res/aotTree.png");
     // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ SEJDERI ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
     unsigned int unifiedShader = createShader("basic.vert", "basic.frag");
@@ -840,10 +848,10 @@ int main(void)
     //tlo
     float groundVertices[] = {
         // Pozicije           // Teksturne koordinate
-        -1350.0f, -0.0f, -1350.0f,  0.0f, 0.0f,  -1.0f, 1.0f, -1.0f,// Levo dole
-         1350.0f, -0.0f, -1350.0f,  repeatTextureTimes, 0.0f, 1.0f, 1.0f, -1.0f,// Desno dole
-         1350.0f, -0.0f,  1350.0f,  repeatTextureTimes, repeatTextureTimes,  1.0f, 1.0f, 1.0f,// Desno gore
-        -1350.0f, -0.0f,  1350.0f,  0.0f, repeatTextureTimes,  -1.0f, 1.0f, 1.0f,// Levo gore
+        -5350.0f, -0.0f, -5350.0f,  0.0f, 0.0f,  -1.0f, 1.0f, -1.0f,// Levo dole
+         5350.0f, -0.0f, -5350.0f,  repeatTextureTimes, 0.0f, 1.0f, 1.0f, -1.0f,// Desno dole
+         5350.0f, -0.0f,  5350.0f,  repeatTextureTimes, repeatTextureTimes,  1.0f, 1.0f, 1.0f,// Desno gore
+        -5350.0f, -0.0f,  5350.0f,  0.0f, repeatTextureTimes,  -1.0f, 1.0f, 1.0f,// Levo gore
     };
 
     unsigned int groundIndices[] = {
@@ -1062,9 +1070,11 @@ int main(void)
             
             //update target world position 
             targets[i].position.z += 0.05f;
-            targets[i].worldPosition = calculateWorldPositionForTarget(targets[i].position, model);
+            targets[i].worldPosition = calculateWorldPositionForTarget(targets[i].position-glm::vec3(0.f, 0.f, tankMovedForward), model);
+            //targets[i].worldPosition.z += tankMovedForward;
             //angle += 2.0f;
             //model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.0f, 1.0f));
+            model = glm::translate(model, glm::vec3(0.f, 0.f, -tankMovedForward));
             model = glm::translate(model, targets[i].position);
             //model = glm::scale(model, glm::vec3(5.0f, 5.0f, 5.0f));
             model = glm::scale(model, glm::vec3(TARGET_SCALE));
@@ -1276,6 +1286,7 @@ int main(void)
         drawCannon(triDTest, tankG);
         drawTank(tankShader, tankG);
         drawWall(triDTest, wallG);
+        drawTrees(triDTest, treesG);
 
         double moveCrossUpDown = mapValue(cannonRotationAngle, -22.5, 22.5, -1, 1.0);
         //drawtxt(unifiedShader, -.05f, .05f, -.05f+moveCrossUpDown, .05f+ moveCrossUpDown, aimG);
@@ -1678,30 +1689,37 @@ void processInput(GLFWwindow* window)
     //    tankPos.z += 12.5 * deltaTime;
     //if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS)
     //    tankPos.z -= 12.5 * deltaTime;
-    if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) {
+    if ((glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS) || glfwGetKey(window, GLFW_KEY_KP_ENTER) == GLFW_PRESS) {
         for (int i = 0; i < NUM_TARGETS; i++) {
-            targets[i].position.z -= 22.5 * deltaTime;
+            //targets[i].position.z -= 22.5 * deltaTime;
         }
+        tankMovedForward += 22.5 * deltaTime;
+    }
+    if ((glfwGetKey(window, GLFW_KEY_0) == GLFW_PRESS) || glfwGetKey(window, GLFW_KEY_KP_0) == GLFW_PRESS) {
+        for (int i = 0; i < NUM_TARGETS; i++) {
+            //targets[i].position.z -= 22.5 * deltaTime;
+        }
+        tankMovedForward -= 22.5 * deltaTime;
     }
     //temp pomeranje cevi
     //if (isZoomedIn) {
-        if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS) {
-            if(cannonRotationAngle<22.5f)
-                cannonRotationAngle += .05f;
-            if (isZoomedIn) {
-                camera.Pitch = cannonRotationAngle;
-                camera.ProcessMouseMovement(0, 0);
-            }
+    if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS) {
+        if(cannonRotationAngle<=22.5f)
+            cannonRotationAngle += .25f*hydraulic;
+        if (isZoomedIn) {
+            camera.Pitch = cannonRotationAngle;
+            camera.ProcessMouseMovement(0, 0);
+        }
 
+    }
+    if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) {
+        if(cannonRotationAngle >= -13.5f)
+            cannonRotationAngle -= .25f*hydraulic;
+        if (isZoomedIn) {
+            camera.Pitch = cannonRotationAngle;
+            camera.ProcessMouseMovement(0, 0);
         }
-        if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) {
-            if(cannonRotationAngle > -13.5f)
-                cannonRotationAngle -= .05f;
-            if (isZoomedIn) {
-                camera.Pitch = cannonRotationAngle;
-                camera.ProcessMouseMovement(0, 0);
-            }
-        }
+    }
 
     //}
 
@@ -1810,7 +1828,7 @@ void processInput(GLFWwindow* window)
     }
     //zumiranje
     if (isZoomedIn) { //is Scoped in bolje 
-        //povecaj zoom
+        //vrti zoom levele
         if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) {
             if (!isXPressed) {
                 zoomLevel += 1.0f;
@@ -1829,12 +1847,12 @@ void processInput(GLFWwindow* window)
 
         //nisanjenje kad zumiras
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-            angle -= 1.0f;
+            angle -= 1.0f*hydraulic;
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-            angle += 1.0f - 0.9;
+            angle += 1.0f * hydraulic;
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-            if (cannonRotationAngle < 22.5f)
-                cannonRotationAngle += .05f;
+            if (cannonRotationAngle <= 25.5f)
+                cannonRotationAngle += .25f * hydraulic;
             if (isZoomedIn) {
                 camera.Pitch = cannonRotationAngle;
                 camera.ProcessMouseMovement(0, 0);
@@ -1842,8 +1860,8 @@ void processInput(GLFWwindow* window)
 
         }
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-            if (cannonRotationAngle > -13.5f)
-                cannonRotationAngle -= .05f;
+            if (cannonRotationAngle >= -13.5f)
+                cannonRotationAngle -= .25f * hydraulic;
             if (isZoomedIn) {
                 camera.Pitch = cannonRotationAngle;
                 camera.ProcessMouseMovement(0, 0);
@@ -1891,7 +1909,18 @@ void processInput(GLFWwindow* window)
         isOPressed = false;
     }
 
+    //Hidraulika
+    if (glfwGetKey(window, GLFW_KEY_KP_ADD) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_EQUAL) == GLFW_PRESS) {
+        voltage += 1.0f; // Povecaj napon
+        if (voltage > 90.0f) voltage = 90.0f; // Ogranici maksimalan napon
+    }
 
+    // Provera tastera -
+    if (glfwGetKey(window, GLFW_KEY_KP_SUBTRACT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_MINUS) == GLFW_PRESS) {
+        voltage -= 1.0f; // Smanji napon
+        if (voltage < 0.0f) voltage = 0.0f; // Ogranici minimalan napon
+    }
+    hydraulic = (voltage + 10.0) / 100.0;
     
 }
 
@@ -2244,6 +2273,7 @@ void initObjects() {
     initCannon();
     initTarget();
     initWall();
+    initTrees();
 }
 
 void initPecurka() {
@@ -2404,8 +2434,10 @@ void drawWall(int wallShader, unsigned wallTexture) {
     //model = glm::translate(model, camera.Position);
     //model = glm::translate(model, -tankPos);
     //model = glm::scale(model, glm::vec3(TANK_SCALE));
-    model = glm::translate(model, glm::vec3(0., 0.f, 100.f));
+
     model = glm::rotate(model, glm::radians(angle), glm::vec3(0.f, 1.f, 0.f));
+    model = glm::translate(model, glm::vec3(0.f, 0.f, -tankMovedForward));
+    model = glm::translate(model, glm::vec3(0., 0.f, 100.f));
     model = glm::scale(model, glm::vec3(WALL_SCALE));
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
@@ -2426,6 +2458,79 @@ void drawWall(int wallShader, unsigned wallTexture) {
     glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture (ako je korišćena)
     glUseProgram(0); // Unbind program
 }
+
+void initTrees() {
+    loadObject("res/worldTrees.obj", treesVertices);
+    glGenVertexArrays(1, &VAOTrees);
+    glGenBuffers(1, &VBOTrees);
+
+    // Bind VAO
+    glBindVertexArray(VAOTrees);
+
+    // Bind VBO
+    glBindBuffer(GL_ARRAY_BUFFER, VBOTrees);
+    glBufferData(GL_ARRAY_BUFFER, treesVertices.size() * sizeof(float), treesVertices.data(), GL_STATIC_DRAW);
+
+
+    // Podesite atribute vrhova
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0); // Pozicije
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float))); // Teksture
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float))); // Normale
+    glEnableVertexAttribArray(2);
+
+    // Unbind VAO
+    glBindVertexArray(0);
+
+}
+
+void drawTrees(int treesShader, unsigned treesTexture) {
+    glBindVertexArray(VAOTrees);
+    glUseProgram(treesShader);
+    //glUniform1i(glGetUniformLocation(wallShader, "isDrawingWall"), 1);
+    //glUniform1i(glGetUniformLocation(wallShader, "isDrawingWindow"), 0);
+    glUniform3fv(glGetUniformLocation(treesShader, "lightPos0"), 1, glm::value_ptr(lightPos0));
+
+    int projLoc = glGetUniformLocation(treesShader, "projection");
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, .1f, 15500.0f);
+    glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+
+    // camera/view transformation
+    int viewLoc = glGetUniformLocation(treesShader, "view");
+    glm::mat4 view = camera.GetViewMatrix();
+    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+
+    int modelLoc = glGetUniformLocation(treesShader, "model");
+    glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+    //model = glm::rotate(model, glm::radians(0.0f), glm::vec3(1.0f, 0.3f, 0.5f));
+    //model = glm::translate(model, camera.Position);
+    //model = glm::translate(model, -tankPos);
+    //model = glm::scale(model, glm::vec3(TANK_SCALE));
+    //model = glm::translate(model, glm::vec3(0., 0.f, 100.f));
+    model = glm::rotate(model, glm::radians(angle), glm::vec3(0.f, 1.f, 0.f));
+    model = glm::translate(model, glm::vec3(0.f, 0.f, -tankMovedForward));
+    model = glm::scale(model, glm::vec3(TREES_SCALE));
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+
+    glActiveTexture(GL_TEXTURE0);
+
+    //glBindTexture(GL_TEXTURE_2D, xboxG);
+    glBindTexture(GL_TEXTURE_2D, treesTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);  // Ili GL_NEAREST
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    //glBindTexture(GL_TEXTURE_2D, 0);
+    glUniform1i(glGetUniformLocation(treesShader, "uTex"), 0);
+
+    glDrawArrays(GL_TRIANGLES, 0, treesVertices.size() / 8);
+
+    glBindVertexArray(0); // Unbind VAO
+    glBindBuffer(GL_ARRAY_BUFFER, 0); // Unbind VBO (ako koristite)
+    glActiveTexture(GL_TEXTURE0); // Unbind texture (ako je potrebno)
+    glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture (ako je korišćena)
+    glUseProgram(0); // Unbind program
+}
+
 
 void initBullet() {
     loadObject("res/blt3.obj", bulletVertices);
