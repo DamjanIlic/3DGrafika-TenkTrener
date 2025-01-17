@@ -452,8 +452,14 @@ struct WalkAnimation {
 
 WalkAnimation walkAnimationFrames[24];
 
+struct DeathAnimation {
+    unsigned int VAODeath = 0;
+    unsigned int VBODeath = 0;
+    vector<float> deathVertices;
+};
 
-
+DeathAnimation deathAnimationFrames[21];
+void initDeath();
 //METE
 unsigned int VAOTarget, VBOTarget;
 vector<float> targetVertices;
@@ -467,7 +473,9 @@ struct Target {
     glm::vec3 position;
     glm::vec3 worldPosition;
     bool isAlive = true;
-    float timeDied = 0.0f;
+    bool deathAnimationStarted;
+    bool deathAnimationEnded;
+    int framesDone = 0;
 };
 
 const int NUM_TARGETS = 10;
@@ -1050,7 +1058,7 @@ int main(void)
         //KOCKE
         int xd = static_cast<int>(currentFrame * 24 * 0.5) % 24;
 
-        glBindVertexArray(walkAnimationFrames[xd].VAOTarget);
+        
         //glBindVertexArray(VAOTarget);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, colossalTitanG);
@@ -1068,8 +1076,10 @@ int main(void)
             glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
             model = glm::rotate(model, glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
             
-            //update target world position 
-            targets[i].position.z += 0.05f;
+            //update target world position
+            if(targets[i].isAlive)
+                targets[i].position.z += 0.1f;
+                //targets[i].position.z += 0.05f;
             targets[i].worldPosition = calculateWorldPositionForTarget(targets[i].position-glm::vec3(0.f, 0.f, tankMovedForward), model);
             //targets[i].worldPosition.z += tankMovedForward;
             //angle += 2.0f;
@@ -1083,8 +1093,67 @@ int main(void)
             //    model = glm::translate(model, )
             //}
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-            if(targets[i].isAlive)
-            glDrawArrays(GL_TRIANGLES, 0, walkAnimationFrames[xd].targetVertices.size() / 8);
+            if (targets[i].isAlive) {
+                //xd = 5;
+                //glBindVertexArray(deathAnimationFrames[xd].VAODeath);
+                //glDrawArrays(GL_TRIANGLES, 0, deathAnimationFrames[xd].deathVertices.size() / 8);
+                glBindVertexArray(walkAnimationFrames[xd].VAOTarget);
+                glDrawArrays(GL_TRIANGLES, 0, walkAnimationFrames[xd].targetVertices.size() / 8);
+            }
+            else {
+                if (!targets[i].deathAnimationStarted) {
+                    if (xd != 20 && xd !=21) {
+                        
+                        glBindVertexArray(walkAnimationFrames[xd].VAOTarget);
+                        glDrawArrays(GL_TRIANGLES, 0, walkAnimationFrames[xd].targetVertices.size() / 8);
+                    }
+                    else if(xd==20 || xd==21){
+                        targets[i].deathAnimationStarted = true;
+                        //targets[i].framesDone = 0;
+                        glBindVertexArray(walkAnimationFrames[xd].VAOTarget);
+                        glDrawArrays(GL_TRIANGLES, 0, walkAnimationFrames[xd].targetVertices.size() / 8);
+                    }
+                }
+                if(targets[i].deathAnimationStarted && !targets[i].deathAnimationEnded){
+                    if (xd == 20) {
+                        glBindVertexArray(walkAnimationFrames[xd].VAOTarget);
+                        glDrawArrays(GL_TRIANGLES, 0, walkAnimationFrames[xd].targetVertices.size() / 8);
+                    }
+                    if (xd == 21) {
+                        glBindVertexArray(deathAnimationFrames[1].VAODeath);
+                        glDrawArrays(GL_TRIANGLES, 0, deathAnimationFrames[1].deathVertices.size() / 8);
+                    }
+                    else if (xd == 22) {
+                        glBindVertexArray(deathAnimationFrames[2].VAODeath);
+                        glDrawArrays(GL_TRIANGLES, 0, deathAnimationFrames[2].deathVertices.size() / 8);
+                    }
+                    else if (xd == 23) {
+                        glBindVertexArray(deathAnimationFrames[3].VAODeath);
+                        glDrawArrays(GL_TRIANGLES, 0, deathAnimationFrames[3].deathVertices.size() / 8);
+                    }
+                    else {
+                        if (xd < 16) {
+                            glBindVertexArray(deathAnimationFrames[xd+4].VAODeath);
+                            glDrawArrays(GL_TRIANGLES, 0, deathAnimationFrames[xd + 4].deathVertices.size() / 8);
+
+                        }
+                        if (xd == 16) {
+                            glBindVertexArray(deathAnimationFrames[xd + 4].VAODeath);
+                            glDrawArrays(GL_TRIANGLES, 0, deathAnimationFrames[xd + 4].deathVertices.size() / 8);
+                            targets[i].deathAnimationEnded = true;
+                        }
+                    }
+                }
+                else if(targets[i].deathAnimationStarted && targets[i].deathAnimationEnded){
+                    glBindVertexArray(deathAnimationFrames[20].VAODeath);
+                    glDrawArrays(GL_TRIANGLES, 0, deathAnimationFrames[20].deathVertices.size() / 8);
+
+                }
+            }
+            //else {
+            //    glBindVertexArray(deathAnimationFrames[20].VAODeath);
+            //    glDrawArrays(GL_TRIANGLES, 0, deathAnimationFrames[20].deathVertices.size() / 8);
+            //}
             //glDrawElements(GL_TRIANGLES, sizeof(indices3d) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
             //glDrawArrays(GL_TRIANGLES, 0, 36);
         
@@ -1297,7 +1366,9 @@ int main(void)
         glBindVertexArray(0);*/
 
         //drawBullet(unifiedShader, bulletG);
-
+        while ((static_cast<float>(glfwGetTime()) - currentFrame) < frameTime) {
+            //zadrzi frejm;
+        }
         glfwSwapBuffers(window);
     }
 
@@ -2274,6 +2345,7 @@ void initObjects() {
     initTarget();
     initWall();
     initTrees();
+    initDeath();
 }
 
 void initPecurka() {
@@ -2786,6 +2858,37 @@ void initTarget() {
 
 }
 
+void initDeath() {
+    for (int i = 0; i < 21; i++) {
+        std::stringstream ss;
+        ss << "res/colossalDeath/" << i + 1 << ".obj";
+        //fileNames.push_back(ss.str());  // Dodajemo string u vektor
+        std::string fileName = ss.str();
+
+        loadObject(fileName, deathAnimationFrames[i].deathVertices);
+        glGenVertexArrays(1, &deathAnimationFrames[i].VAODeath);
+        glGenBuffers(1, &deathAnimationFrames[i].VBODeath);
+
+        // Bind VAO
+        glBindVertexArray(deathAnimationFrames[i].VAODeath);
+
+        // Bind VBO
+        glBindBuffer(GL_ARRAY_BUFFER, deathAnimationFrames[i].VBODeath);
+        glBufferData(GL_ARRAY_BUFFER, deathAnimationFrames[i].deathVertices.size() * sizeof(float), deathAnimationFrames[i].deathVertices.data(), GL_STATIC_DRAW);
+
+
+        // Podesite atribute vrhova
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0); // Pozicije
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float))); // Teksture
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float))); // Normale
+        glEnableVertexAttribArray(2);
+
+        // Unbind VAO
+        glBindVertexArray(0);
+    }
+}
 
 
 
