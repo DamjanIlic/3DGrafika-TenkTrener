@@ -478,7 +478,7 @@ struct Target {
     int framesDone = 0;
 };
 
-const int NUM_TARGETS = 10;
+const int NUM_TARGETS = 20;
 
 Target targets[NUM_TARGETS];
 void initTargetPositions();
@@ -672,6 +672,7 @@ int main(void)
     unsigned terrainG = loadImageToTexture("res/terrain.png");
     unsigned wallG = loadImageToTexture("res/aotwall.png");
     unsigned treesG = loadImageToTexture("res/aotTree.png");
+    unsigned groundG = loadImageToTexture("res/travaTekstura2.png");
     // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ SEJDERI ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
     unsigned int unifiedShader = createShader("basic.vert", "basic.frag");
@@ -852,14 +853,14 @@ int main(void)
     float cupolaAngle = 0.0f; // Ugao rotacije u stepenima
     float alpha = glm::radians(cupolaAngle); // Pretvaranje u radijane
 
-    float repeatTextureTimes = 1.f;
+    float repeatTextureTimes = 555.f;
     //tlo
     float groundVertices[] = {
         // Pozicije           // Teksturne koordinate
-        -5350.0f, -0.0f, -5350.0f,  0.0f, 0.0f,  -1.0f, 1.0f, -1.0f,// Levo dole
-         5350.0f, -0.0f, -5350.0f,  repeatTextureTimes, 0.0f, 1.0f, 1.0f, -1.0f,// Desno dole
-         5350.0f, -0.0f,  5350.0f,  repeatTextureTimes, repeatTextureTimes,  1.0f, 1.0f, 1.0f,// Desno gore
-        -5350.0f, -0.0f,  5350.0f,  0.0f, repeatTextureTimes,  -1.0f, 1.0f, 1.0f,// Levo gore
+        -9350.0f, -0.0f, -5350.0f,  0.0f, 0.0f,  -1.0f, 1.0f, -1.0f,// Levo dole
+         9350.0f, -0.0f, -5350.0f,  repeatTextureTimes, 0.0f, 1.0f, 1.0f, -1.0f,// Desno dole
+         9350.0f, -0.0f,  4350.0f,  repeatTextureTimes, repeatTextureTimes,  1.0f, 1.0f, 1.0f,// Desno gore
+        -9350.0f, -0.0f,  4350.0f,  0.0f, repeatTextureTimes,  -1.0f, 1.0f, 1.0f,// Levo gore
     };
 
     unsigned int groundIndices[] = {
@@ -1027,7 +1028,7 @@ int main(void)
 
 
         int projLoc = glGetUniformLocation(triDTest, "projection");
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 5800.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 10000.0f);
         glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
         //triDTest.setMat4("projection", projection);
 
@@ -1070,7 +1071,7 @@ int main(void)
         int modelLoc = glGetUniformLocation(triDTest, "model");
 
 
-        for (unsigned int i = 0; i < 10; i++)
+        for (unsigned int i = 0; i < NUM_TARGETS; i++)
         {
             // calculate the model matrix for each object and pass it to shader before drawing
             glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
@@ -1078,7 +1079,7 @@ int main(void)
             
             //update target world position
             if(targets[i].isAlive)
-                targets[i].position.z += 0.1f;
+                targets[i].position.z += 0.135f;
                 //targets[i].position.z += 0.05f;
             targets[i].worldPosition = calculateWorldPositionForTarget(targets[i].position-glm::vec3(0.f, 0.f, tankMovedForward), model);
             //targets[i].worldPosition.z += tankMovedForward;
@@ -1316,20 +1317,24 @@ int main(void)
         //glDrawElements(GL_TRIANGLES, sizeof(indices3d) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
         glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
-        model = glm::rotate(model, glm::radians(0.0f), glm::vec3(1.0f, 0.3f, 0.5f));
+        //model = glm::rotate(model, glm::radians(0.0f), glm::vec3(1.0f, 0.3f, 0.5f));
 
 
         //pod tekstura
-        //glActiveTexture(GL_TEXTURE0);
+        glActiveTexture(GL_TEXTURE0);
 
         ////glBindTexture(GL_TEXTURE_2D, xboxG);
-        //glBindTexture(GL_TEXTURE_2D, terrainG);
-        //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // Ponavljanje po S (x) osi
-        //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // Ponavljanje po T (y) osi
+        glBindTexture(GL_TEXTURE_2D, groundG);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);  // Ili GL_NEAREST
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
         ////glBindTexture(GL_TEXTURE_2D, 0);
-        //glUniform1i(glGetUniformLocation(triDTest, "uTex"), 0);
+        glUniform1i(glGetUniformLocation(triDTest, "uTex"), 0);
 
+
+
+        model = glm::rotate(model, glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::translate(model, glm::vec3(0.f, 0.f, -tankMovedForward));
 
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
         glBindVertexArray(groundVAO);
@@ -1355,8 +1360,10 @@ int main(void)
         drawCannon(triDTest, tankG);
         drawTank(tankShader, tankG);
         drawWall(triDTest, wallG);
+        //glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+        //glDisable(GL_DEPTH_TEST);
         drawTrees(triDTest, treesG);
-
+        // glEnable(GL_DEPTH_TEST);
         double moveCrossUpDown = mapValue(cannonRotationAngle, -22.5, 22.5, -1, 1.0);
         //drawtxt(unifiedShader, -.05f, .05f, -.05f+moveCrossUpDown, .05f+ moveCrossUpDown, aimG);
         drawtxt(unifiedShader, -.05f, .05f, -.05f, .05f, aimG);
@@ -3134,13 +3141,21 @@ void initTargetPositions() {
         glm::vec3(5.5f,  0.f, -5.5f) * asdf
     };
 
+    glm::vec3 targetPositions[NUM_TARGETS];
+    for (int i = 0; i < NUM_TARGETS/2; i++) {
+        targetPositions[i] = glm::vec3(randBetween(-1000.f, -100.f), 0.f, randBetween(-150.f, 1000.f));
+    }
+    for (int i = NUM_TARGETS / 2; i < NUM_TARGETS; i++) {
+        targetPositions[i] = glm::vec3(randBetween(100.f, 1000.f), 0.f, randBetween(-150.f, 1000.f));
+    }
+
     //tmp da stoje na povrsini lepo jer asdf pomnozi y xd
     for (int i = 0; i < 10; i++) {
         cubePositions[i].y = 0.f;
     }
 
     for (int i = 0; i < NUM_TARGETS; i++) {
-        targets[i].position = cubePositions[i];
+        targets[i].position = targetPositions[i];
         std::cout << targets[i].position.x << " " << targets[i].position.y << " " << targets[i].position.z << endl;
     }
 }
