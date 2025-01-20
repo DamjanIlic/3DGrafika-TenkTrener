@@ -7,5 +7,10 @@ uniform sampler2D uTex; //teksturna jedinica
 
 void main()
 {
-	outCol = texture(uTex, chTex);
+
+	vec4 texColor = texture(uTex, chTex);
+	if (texColor.a < 0.1) {
+     //   discard; 
+    }
+	outCol = texColor;
 }

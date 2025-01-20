@@ -487,7 +487,7 @@ vector<float> targetVertices;
 const float TARGET_SCALE = 750.0f/FACTOR;
 void initTarget();
 void drawTargets(int tankShader, unsigned tankTexture);
-
+float mapFurthestTitanToLoadingBar();
 
 
 struct Target {
@@ -696,6 +696,10 @@ int main(void)
     unsigned groundG = loadImageToTexture("res/travaTekstura.png");
     unsigned cloudG = loadImageToTexture("res/cloud.png");
     unsigned skyG = loadImageToTexture("res/sky.png");
+    unsigned wallIconG = loadImageToTexture("res/wallNew.png");
+    unsigned oceanIconG = loadImageToTexture("res/oceanIcon.png");
+    unsigned colossalIconG = loadImageToTexture("res/colossalIcon1Test.png");
+    unsigned rumblingG = loadImageToTexture("res/RUMBLING.png");
     // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ SEJDERI ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
     unsigned int unifiedShader = createShader("basic.vert", "basic.frag");
@@ -705,7 +709,7 @@ int main(void)
 
     //3d
     unsigned int triDTest = createShader("kocka3dtest.vert", "kocka3dtest.frag");
-    unsigned int particleShader = createShader("particle.vert", "particle.frag");\
+    unsigned int particleShader = createShader("particle.vert", "particle.frag");
 
 
 
@@ -1306,7 +1310,7 @@ int main(void)
 
         //ATM COUT
        // std::cout << camera.Yaw << " " << camera.Pitch << endl;
-        std::cout << camera.Position.x << " " << camera.Position.y << " " << camera.Position.z << " " /*<< camera.Yaw*/  << endl;
+       // std::cout << camera.Position.x << " " << camera.Position.y << " " << camera.Position.z << " " /*<< camera.Yaw*/  << endl;
         //std::cout << camera.Front.x << " " << camera.Front.y << " " << camera.Front.z << endl;
         cupolaAngle += 0.315f;
         //alpha = glm::radians(cupolaAngle);
@@ -1521,7 +1525,17 @@ int main(void)
 
         double moveCrossUpDown = mapValue(cannonRotationAngle, -22.5, 22.5, -1, 1.0);
         //drawtxt(unifiedShader, -.05f, .05f, -.05f+moveCrossUpDown, .05f+ moveCrossUpDown, aimG);
+        //drawtxt(unifiedShader, -.05f, .05f, -.05f, .05f, aimG);
+        //drawtxt(unifiedShader, -.65, -.5f, .8, .95f, oceanIconG);
+        float timeLeft = mapFurthestTitanToLoadingBar();
+        drawtxt(unifiedShader, -.9f+timeLeft, -.5f+ timeLeft, .85f, .93f, colossalIconG);
+        drawtxt(unifiedShader, -.9, -.5, .85, .93, rumblingG);
+        drawtxt(unifiedShader, -1.02f, -.87f, .82, .97f, wallIconG);
+
         drawtxt(unifiedShader, -.05f, .05f, -.05f, .05f, aimG);
+
+
+        drawtxt(unifiedShader, -.0f, .0f, -.05f, .05f, colossalIconG);
 
       /*  glBindVertexArray(vaotest);
         glDrawElements(GL_TRIANGLES, sizeof(indices3d) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
@@ -3579,8 +3593,8 @@ bool checkForHit(Projectile projectile, Target &target) {
     }
     //glava
     if ((projectile.position.y >= 7.8 * TARGET_SCALE / 5.f) && (projectile.position.y < 8.4 * TARGET_SCALE / 5.f)) {
-        if ((abs(projectile.position.x - target.worldPosition.x) < .4 * TARGET_SCALE / 5)) {
-            if ((abs(projectile.position.z - target.worldPosition.z) < .3 * TARGET_SCALE / 5)) {
+        if ((abs(projectile.position.x - target.worldPosition.x) < .3 * TARGET_SCALE / 5)) {
+            if ((abs(projectile.position.z - target.worldPosition.z) < .25 * TARGET_SCALE / 5)) {
 
                 if (target.isAlive) {
                     //target.isAlive = false;
@@ -3633,4 +3647,21 @@ float findShakeAngle(float needleAngle) {
     else if (voltage <= 90) {
         return (rand() % 5 - 2) * 1.15f;
     }
+}
+
+float mapFurthestTitanToLoadingBar() {
+    int furthestId = 0;
+    float maxDistance = 1000000.f;
+    for (int i = 0; i < NUM_TARGETS; i++) {
+        if (targets[i].isAlive) {
+            if ((4350.f - targets[i].position.z) < maxDistance) {
+                maxDistance = 4350.f - targets[i].position.z;
+                furthestId = i;
+            }
+        }
+    }
+   // cout << furthestId << endl;
+    //cout << maxDistance << endl; 
+   // cout << mapValue(maxDistance, 4350.f, 0.f, 0.f, .4f) << endl;
+    return mapValue(4350.f - targets[furthestId].position.z, 0, 4350, .4, .0f);
 }
