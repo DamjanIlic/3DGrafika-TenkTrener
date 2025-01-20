@@ -7,10 +7,12 @@ out vec4 FragColor;
 
 uniform vec3 moonLightPos;
 uniform vec3 lightBulbLightPos;
+uniform vec3 canShootLightPos;
 
 uniform int isLightOn;
 uniform int isDrawingWindow;
 uniform int isDrawingWall;
+uniform int canShoot;
 
 uniform sampler2D uTex;
 
@@ -47,6 +49,19 @@ void main() {
     }
 
 
+    //Can shoot led lampica
+    float canShootLightMaxRange = 2.f;
+    if(canShoot == 1){
+        vec3 posToCanShootLight = canShootLightPos - vs_position;
+        float distance = length(posToCanShootLight);
+        float rangeIntensity = smoothstep(canShootLightMaxRange, canShootLightMaxRange * 0.5, distance);
+
+        posToLightDirVec = normalize(posToCanShootLight);
+        diffuseColor = vec3(1.0f, 0.0f, 0.0f); // Crveno svetlo
+        diffuse = clamp(dot(posToLightDirVec, vs_normal), 0.0f, 1.0f);
+
+        diffuseFinal += diffuseColor * diffuse * rangeIntensity; // Intenzitet opada 
+    }
     //FragColor = vec4(0.9, 0.9, 0.9f, 0.2f)* (vec4(ambientLight, 0.2f) + vec4(diffuseFinal, 0.2));
     FragColor = texture(uTex, chTex) * (vec4(ambientLight, 1.0f) + vec4(diffuseFinal, 1.f));
     if(isDrawingWindow == 1){

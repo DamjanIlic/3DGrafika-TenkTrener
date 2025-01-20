@@ -47,7 +47,7 @@ void updateReadyIndicator(float currentTime);
 double mapValue(double value, double minSource, double maxSource, double minTarget, double maxTarget) {
     // Proveri da li je vrednost unutar raspona izvora
     if (value < minSource || value > maxSource) {
-        std::cerr << "Value out of source range!" << std::endl;
+        //std::cerr << "Value out of source range!" << std::endl;
         return 0.0;
     }
 
@@ -236,6 +236,9 @@ float deltaTime = 0.0f;	// time between current frame and last frame
 float lastFrame = 0.0f;
 
 
+//kraj
+void checkForEnd();
+
 
 glm::vec3 calculateInitialVelocity();
 //bool isBulletFlying = false;
@@ -270,10 +273,11 @@ bool isLookingOutside = false;
 glm::vec3 lightPos0(0.0f, 55.0f, 0.0f);
 glm::vec3 moonLightPos(1.55f, 3.0f, -2.20f); //prozorcic tenka
 glm::vec3 lightBulbLightPos(0.0f, 3.45f, 0.6f);
+glm::vec3 redLightPos(0.645f, 3.67f, -2.f);
+
 
 
 float angle = 0.0f;
-
 
 
 float randBetween(float min, float max) {
@@ -313,23 +317,40 @@ int isLightOn = 1;
 int isNightvisionOn = 0;
 int isSpotlightOn = 0;
 
+glm::vec3 spotLightDirMoved = glm::vec3(0);
+
 glm::vec3 tankPos(0.0f, 0.0f, 0.0f);
 float tankMovedForward = 0.f;
 
-
+//Kazaljka voltmetra
+unsigned int VAONeedle, VBONeedle;
+vector<float> needleVertices;
+const float NEEDLE_SCALE = 5.0f / FACTOR;
+void initNeedle();
+void drawNeedle(int tankShader, unsigned tankTexture);
+glm::vec3 needlePos(1.749f, 1.60502f, -1.25358f);
+float needleAngle = 90.0f;
 //ZID
 unsigned int VAOWall, VBOWall;
 vector<float> wallVertices;
 const float WALL_SCALE =7.5f / FACTOR;
 void initWall();
 void drawWall(int wallShader, unsigned wallTexture);
-
+float findShakeAngle(float needleAngle);
 //Drvece
 unsigned int VAOTrees, VBOTrees;
 vector<float> treesVertices;
 const float TREES_SCALE = 5.f / FACTOR;
 void initTrees();
 void drawTrees(int treesShader, unsigned treesTexture);
+
+
+//Oblaci
+unsigned int VAOClouds, VBOClouds;
+vector<float> cloudsVertices;
+const float CLOUD_SCALE = 5.f / FACTOR;
+void initClouds();
+void drawClouds(int cloudsShader, unsigned cloudsTexture);
 
 //Prozorcic
 unsigned int VAOWindow, VBOWindow;
@@ -664,7 +685,7 @@ int main(void)
     unsigned aimG = loadImageToTexture("res/aim2.png");
     unsigned dottedG = loadImageToTexture("res/dotted.png");
     unsigned xboxG = loadImageToTexture("res/box.png");
-    unsigned tankG = loadImageToTexture("res/teksturaBoja.png");
+    unsigned tankG = loadImageToTexture("res/teksturaBoja2.png");
     unsigned int dragonG = loadImageToTexture("res/dragon.png");
     unsigned csTargetG = loadImageToTexture("res/cstarget.png");
     unsigned morhuhnG = loadImageToTexture("res/morhuhn.png");
@@ -672,7 +693,9 @@ int main(void)
     unsigned terrainG = loadImageToTexture("res/terrain.png");
     unsigned wallG = loadImageToTexture("res/aotwall.png");
     unsigned treesG = loadImageToTexture("res/aotTree.png");
-    unsigned groundG = loadImageToTexture("res/travaTekstura2.png");
+    unsigned groundG = loadImageToTexture("res/travaTekstura.png");
+    unsigned cloudG = loadImageToTexture("res/cloud.png");
+    unsigned skyG = loadImageToTexture("res/sky.png");
     // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ SEJDERI ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
     unsigned int unifiedShader = createShader("basic.vert", "basic.frag");
@@ -853,15 +876,16 @@ int main(void)
     float cupolaAngle = 0.0f; // Ugao rotacije u stepenima
     float alpha = glm::radians(cupolaAngle); // Pretvaranje u radijane
 
-    float repeatTextureTimes = 555.f;
+    float repeatTextureTimes = 650.f;
     //tlo
     float groundVertices[] = {
         // Pozicije           // Teksturne koordinate
-        -9350.0f, -0.0f, -5350.0f,  0.0f, 0.0f,  -1.0f, 1.0f, -1.0f,// Levo dole
-         9350.0f, -0.0f, -5350.0f,  repeatTextureTimes, 0.0f, 1.0f, 1.0f, -1.0f,// Desno dole
+        -9350.0f, -0.0f, -5000.0f,  0.0f, 0.0f,  -1.0f, 1.0f, -1.0f,// Levo dole
+         9350.0f, -0.0f, -5000.0f,  repeatTextureTimes, 0.0f, 1.0f, 1.0f, -1.0f,// Desno dole
          9350.0f, -0.0f,  4350.0f,  repeatTextureTimes, repeatTextureTimes,  1.0f, 1.0f, 1.0f,// Desno gore
         -9350.0f, -0.0f,  4350.0f,  0.0f, repeatTextureTimes,  -1.0f, 1.0f, 1.0f,// Levo gore
     };
+
 
     unsigned int groundIndices[] = {
         2, 1, 0, // Prvi trougao
@@ -893,8 +917,90 @@ int main(void)
 
     glBindVertexArray(0);
 
+    float repeatSkyTimes = 35.f;
+    float skyboxVertices[] = {
+        // Zadnji zid (ispravan)
+        -20000, -500.0f, -10000,  0.0f, 0.0f,          -1.0f, -1.0f, -1.0f, // Levo dole
+         20000, -500.0f, -10000,  repeatSkyTimes, 0.0f,  1.0f, -1.0f, -1.0f, // Desno dole
+         20000, 25000, -10000,  repeatSkyTimes, repeatSkyTimes,  1.0f, 1.0f, -1.0f, // Desno gore
+        -20000, 25000, -10000,  0.0f, repeatSkyTimes,  -1.0f, 1.0f, -1.0f, // Levo gore
 
-    /////////////////////3D TEST
+        // Prednji zid (ispravan)
+        -20000, -500.0f,  10000,  0.0f, 0.0f,          -1.0f, -1.0f, 1.0f, // Levo dole
+         20000, -500.0f,  10000,  repeatSkyTimes, 0.0f,  1.0f, -1.0f, 1.0f, // Desno dole
+         20000, 25000,  10000,  repeatSkyTimes, repeatSkyTimes,  1.0f, 1.0f, 1.0f, // Desno gore
+        -20000, 25000,  10000,  0.0f, repeatSkyTimes,  -1.0f, 1.0f, 1.0f, // Levo gore
+
+        // Leva strana (CCW)
+        -20000, -500.0f, -10000,  0.0f, 0.0f,          -1.0f, -1.0f, -1.0f, // Levo dole nazad
+        -20000, -500.0f,  10000,  repeatSkyTimes, 0.0f,  -1.0f, -1.0f, 1.0f,  // Levo dole napred
+        -20000, 25000,  10000,  repeatSkyTimes, repeatSkyTimes,  -1.0f, 1.0f, 1.0f, // Levo gore napred
+        -20000, 25000, -10000,  0.0f, repeatSkyTimes,  -1.0f, 1.0f, -1.0f, // Levo gore nazad
+
+        // Desna strana (CCW)
+         20000, -500.0f, -10000,  0.0f, 0.0f,          1.0f, -1.0f, -1.0f, // Desno dole nazad
+         20000, -500.0f,  10000,  repeatSkyTimes, 0.0f,  1.0f, -1.0f, 1.0f, // Desno dole napred
+         20000, 25000,  10000,  repeatSkyTimes, repeatSkyTimes,  1.0f, 1.0f, 1.0f, // Desno gore napred
+         20000, 25000, -10000,  0.0f, repeatSkyTimes,  1.0f, 1.0f, -1.0f, // Desno gore nazad
+    };
+    unsigned int skyboxIndices[] = {
+        // Zadnji zid (ispravan)
+        0, 1, 2,
+        2, 3, 0,
+
+        // Prednji zid (ispravan)
+        6, 5, 4,
+        4, 7, 6,
+
+        // Leva strana (CCW)
+        10, 9, 8,   // Levo dole nazad -> Levo dole napred -> Levo gore napred
+        8, 11, 10,  // Levo gore napred -> Levo gore nazad -> Levo dole nazad
+
+        // Desna strana (CCW)
+        12, 13, 14, // Desno dole nazad -> Desno dole napred -> Desno gore napred
+        14, 15, 12, // Desno gore napred -> Desno gore nazad -> Desno dole nazad
+
+        // Dole
+        0, 1, 5,
+        5, 4, 0,
+
+        // Gore
+        3, 2, 6,
+        6, 7, 3
+    };
+
+    unsigned int skyboxVAO, skyboxVBO, skyboxEBO;
+    glGenVertexArrays(1, &skyboxVAO);
+    glGenBuffers(1, &skyboxVBO);
+    glGenBuffers(1, &skyboxEBO);
+
+    glBindVertexArray(skyboxVAO);
+
+    //     Povezivanje podataka
+    glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), skyboxVertices, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, skyboxEBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(skyboxIndices), skyboxIndices, GL_STATIC_DRAW);
+
+    // Pozicije
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    
+    // Teksturne koordinate
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    // Normale
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+
+    glBindVertexArray(0);
+
+
+
+    ///////////////////3D TEST
     //unsigned int VAO3d, VBO3d, EBO3d;
     //glGenVertexArrays(1, &VAO3d);
     //glGenBuffers(1, &VBO3d);
@@ -967,7 +1073,7 @@ int main(void)
     while (!glfwWindowShouldClose(window)) {
         //glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClearColor(0.005f, 0.005f, 0.03f, 1.0f); //nocno nebo
-        glClearColor(0.6, 0.9, 1., 1.f); //vajb
+        //glClearColor(0.6, 0.9, 1., 1.f); //vajb
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
         glfwPollEvents();
 
@@ -984,6 +1090,12 @@ int main(void)
         // ----- tastatura input
         processInput(window);
 
+
+        //voltmetar kazaljka
+        needleAngle = mapValue(voltage, 0.f, 90.f, 90.f, -90.f);
+        needleAngle += findShakeAngle(needleAngle);
+        //visina pogleda locked
+        camera.Position.y = 3.f;
         //// Koristimo shader za kocku
         
         //int modelLoc = glGetUniformLocation(triDTest, "model");
@@ -996,7 +1108,13 @@ int main(void)
         //glBindVertexArray(VAO3d);
         //glDrawElements(GL_TRIANGLES, sizeof(indices3d) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
         //glBindVertexArray(0);
-        if (lastShotTime>0) {
+
+
+
+
+        
+        //IMPACT EXPLOPOSION RENDER I UPDATE
+        if (lastShotTime > 0) {
 
             if ((currentFrame - lastShotTime) <= 3.0f) {
                 renderParticles(particleShader, cannonExplosionParticles, CANNON_EXPLOSION);
@@ -1011,24 +1129,18 @@ int main(void)
                     shouldCreateNewSmokeParticles = false;
                 }
             }
-            if ((currentFrame - startEmitImpact) <= 3.f) {
+            if ((currentFrame - startEmitImpact) <= 2.9f) {
                 updateParticles(deltaTime, impactExplosionParticles, IMPACT);
                 renderParticles(particleShader, impactExplosionParticles, IMPACT);
             }
         }
-
-
-
-        
-        //IMPACT EXPLOPOSION RENDER I UPDATE
-
 
         glUseProgram(triDTest);
 
 
 
         int projLoc = glGetUniformLocation(triDTest, "projection");
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 10000.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 55000.0f);
         glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
         //triDTest.setMat4("projection", projection);
 
@@ -1053,7 +1165,7 @@ int main(void)
 
         glUniform3fv(glGetUniformLocation(triDTest, "lightPos0"), 1, glm::value_ptr(lightPos0));
         glUniform3fv(glGetUniformLocation(triDTest, "spotlightLightPos"), 1, glm::value_ptr(scopeCameraPos+glm::vec3(0.f, 0.f, 0.f)));
-        glUniform3fv(glGetUniformLocation(triDTest, "spotlightDir"), 1, glm::value_ptr(glm::vec3(0.0f, -.11f, -1.0f)));
+        glUniform3fv(glGetUniformLocation(triDTest, "spotlightDir"), 1, glm::value_ptr(glm::vec3(0.0f, -.11f, -1.0f)+spotLightDirMoved));
 
         
         //KOCKE
@@ -1189,12 +1301,12 @@ int main(void)
 
         std::vector<glm::vec3> cubePositionsNew;
 
-        //visina pogleda locked
-        //camera.Position.y = 3.f;
+
+
 
         //ATM COUT
        // std::cout << camera.Yaw << " " << camera.Pitch << endl;
-        //std::cout << camera.Position.x << " " << camera.Position.y << " " << camera.Position.z << " " /*<< camera.Yaw*/  << endl;
+        std::cout << camera.Position.x << " " << camera.Position.y << " " << camera.Position.z << " " /*<< camera.Yaw*/  << endl;
         //std::cout << camera.Front.x << " " << camera.Front.y << " " << camera.Front.z << endl;
         cupolaAngle += 0.315f;
         //alpha = glm::radians(cupolaAngle);
@@ -1261,10 +1373,29 @@ int main(void)
                 }
                 if (projectiles[i].isFlying) {
 
+                    int subSteps = 10;
+                    float subDeltaTime = deltaTime / subSteps;
 
-                    projectiles[i].position.z -= projectiles[i].initialVelocity.x * deltaTime;
-                    projectiles[i].position.y += projectiles[i].initialVelocity.y * deltaTime - 0.5f * 10.f * deltaTime * deltaTime;
-                    projectiles[i].initialVelocity.y -= 10.f * deltaTime;
+                    for (int k = 0; k < subSteps; k++) {
+                        projectiles[i].position.z -= projectiles[i].initialVelocity.x * subDeltaTime;
+                        projectiles[i].position.y += projectiles[i].initialVelocity.y * subDeltaTime - 0.5f * 10.f * subDeltaTime * subDeltaTime;
+                        projectiles[i].initialVelocity.y -= 10.f * subDeltaTime;
+
+
+                        for (int j = 0; j < NUM_TARGETS; j++) {
+                            if (checkForHit(projectiles[i], targets[j])) {
+                                initParticles(glm::vec3(projectiles[i].position.x, projectiles[i].position.y, projectiles[i].position.z), impactExplosionParticles, IMPACT);
+                                startEmitImpact = currentFrame;
+                                projectiles[i].isFlying = false;
+                                projectiles[i].initialVelocity = glm::vec3(0.0f, 0.0f, 0.0f);
+                            }
+                        }
+
+                    }
+
+                    //projectiles[i].position.z -= projectiles[i].initialVelocity.x * deltaTime;
+                    //projectiles[i].position.y += projectiles[i].initialVelocity.y * deltaTime - 0.5f * 10.f * deltaTime * deltaTime;
+                    //projectiles[i].initialVelocity.y -= 10.f * deltaTime;
 
                     //if (bombaPositions[10 - ammo-1].y < 0.) {
                     //    initialVelocity = glm::vec3(0.f, 0.f, 0.f);
@@ -1274,25 +1405,24 @@ int main(void)
                     //}
                     // fix: proveri prvo hit pa onda pomeri poziciju za toliko.
                     //std::cout << projectiles[i].position.x << " " << projectiles[i].position.y << " " << projectiles[i].position.z << endl;
-                    for (int j = 0; j < NUM_TARGETS; j++) {
-                        //check for hit
+                    //for (int j = 0; j < NUM_TARGETS; j++) {
+                    //    //check for hit
 
-                        //if (glm::distance(projectiles[i].position, targets[j].worldPosition) < 4.f) {
-                        if(checkForHit(projectiles[i], targets[j])){
-                            initParticles(glm::vec3(projectiles[i].position.x, projectiles[i].position.y + .5f, projectiles[i].position.z), impactExplosionParticles, IMPACT);
-                            startEmitImpact = currentFrame;
-                            projectiles[i].isFlying = false;
-                            projectiles[i].initialVelocity = glm::vec3(0.0f, 0.0f, 0.0f);
+                    //    //if (glm::distance(projectiles[i].position, targets[j].worldPosition) < 4.f) {
+                    //    if(checkForHit(projectiles[i], targets[j])){
+                    //        initParticles(glm::vec3(projectiles[i].position.x, projectiles[i].position.y, projectiles[i].position.z), impactExplosionParticles, IMPACT);                            startEmitImpact = currentFrame;
+                    //        projectiles[i].isFlying = false;
+                    //        projectiles[i].initialVelocity = glm::vec3(0.0f, 0.0f, 0.0f);
 
-                            //ATM COUT 
-                            //std::cout << "HIT TARGET: " << j << endl;
-                            //std::cout << "Distance: " << glm::distance(projectiles[i].position, targets[j].position) << endl;
-                            //std::cout << "Target pos: "  << targets[j].position.x << " " << targets[j].position.y << " " << targets[j].position.z << endl;
-                        }
-                    }
+                    //        //ATM COUT 
+                    //        //std::cout << "HIT TARGET: " << j << endl;
+                    //        //std::cout << "Distance: " << glm::distance(projectiles[i].position, targets[j].position) << endl;
+                    //        //std::cout << "Target pos: "  << targets[j].position.x << " " << targets[j].position.y << " " << targets[j].position.z << endl;
+                    //    }
+                    //}
 
                     if (projectiles[i].position.y <= 0.f && projectiles[i].isFlying) {
-                        initParticles(glm::vec3(projectiles[i].position.x, projectiles[i].position.y+.5f, projectiles[i].position.z), impactExplosionParticles, IMPACT);
+                        initParticles(glm::vec3(projectiles[i].position.x, projectiles[i].position.y, projectiles[i].position.z), impactExplosionParticles, IMPACT);
                         startEmitImpact = currentFrame;
                         projectiles[i].isFlying = false;
                         //projectiles[i].initialVelocity = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -1316,6 +1446,8 @@ int main(void)
         }
         //glDrawElements(GL_TRIANGLES, sizeof(indices3d) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
+
+
         glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
         //model = glm::rotate(model, glm::radians(0.0f), glm::vec3(1.0f, 0.3f, 0.5f));
 
@@ -1339,8 +1471,23 @@ int main(void)
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
         glBindVertexArray(groundVAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+
+
+        //glActiveTexture(GL_TEXTURE0);
+
+        ////glBindTexture(GL_TEXTURE_2D, xboxG);
+        glBindTexture(GL_TEXTURE_2D, skyG);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);//  Ili GL_NEAREST
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glUniform1i(glGetUniformLocation(triDTest, "uTex"), 0);
+        glUniform1i(glGetUniformLocation(triDTest, "isDrawingSky"), 1);
+        glBindVertexArray(skyboxVAO);//  Bira VAO za skybox
+        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0); // Nacrtaj 36 indeksa (6 strana * 2 trougla * 3 verteksa)
         glBindVertexArray(0);
 
+        glBindVertexArray(0);
+        glUniform1i(glGetUniformLocation(triDTest, "isDrawingSky"), 0);
 
 
 
@@ -1358,12 +1505,20 @@ int main(void)
         //glBindVertexArray(0);
 
         drawCannon(triDTest, tankG);
-        drawTank(tankShader, tankG);
+        
         drawWall(triDTest, wallG);
         //glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
         //glDisable(GL_DEPTH_TEST);
+        drawClouds(triDTest, cloudG);
         drawTrees(triDTest, treesG);
+        drawTank(tankShader, tankG);
+        drawNeedle(tankShader, tankG);
         // glEnable(GL_DEPTH_TEST);
+
+
+
+
+
         double moveCrossUpDown = mapValue(cannonRotationAngle, -22.5, 22.5, -1, 1.0);
         //drawtxt(unifiedShader, -.05f, .05f, -.05f+moveCrossUpDown, .05f+ moveCrossUpDown, aimG);
         drawtxt(unifiedShader, -.05f, .05f, -.05f, .05f, aimG);
@@ -1543,7 +1698,7 @@ void shootBullet(unsigned int shaderProgram) {
 }
 
 void updateReadyIndicator(float currentTime) {
-    if (ammo > 0 &&  ((currentTime - lastShotTime) >= (cooldown+3.0f))) {
+    if (ammo > 0 &&  ((currentTime - lastShotTime) >= (cooldown+3.5f))) {
         canShoot = true;
         //for (int i = 0; i < 10; i++) {
         //    if (projectiles[i].isFlying) {
@@ -1719,24 +1874,6 @@ void processInput(GLFWwindow* window)
 
     //cam related WASD movement
     if (!isZoomedIn && !isLookingOutside) {
-        
-        //ogranicenje kretanja u tenku, 2 coska
-        //if (camera.Position.x < -2.0f) {
-        //    camera.Position.x = -2.0f;
-        //}
-        //if (camera.Position.z > 2.05f) {
-        //    camera.Position.z = 2.05f;
-        //}
-
-
-        //if (camera.Position.x > 1.93f) {
-        //    camera.Position.x = 1.93f;
-        //}
-        //if (camera.Position.z < -0.13f) {
-        //    camera.Position.z = -0.13f;
-        //}
-
-
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
             camera.ProcessKeyboard(FORWARD, deltaTime);
         }
@@ -1746,6 +1883,24 @@ void processInput(GLFWwindow* window)
             camera.ProcessKeyboard(LEFT, deltaTime);
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
             camera.ProcessKeyboard(RIGHT, deltaTime);
+        //ogranicenje kretanja u tenku, 2 coska
+        if (camera.Position.x < -2.0f) {
+            camera.Position.x = -2.0f;
+        }
+        if (camera.Position.z > 2.05f) {
+            camera.Position.z = 2.05f;
+        }
+
+
+        if (camera.Position.x > 1.93f) {
+            camera.Position.x = 1.93f;
+        }
+        if (camera.Position.z < -0.13f) {
+            camera.Position.z = -0.13f;
+        }
+
+
+
     }
     //if (isZoomedIn) {
     //    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
@@ -1855,6 +2010,14 @@ void processInput(GLFWwindow* window)
     else {
         isRPressed = false;
     }
+    //mrdanje reflektora
+    if (glfwGetKey(window, GLFW_KEY_KP_5) == GLFW_PRESS) {
+        spotLightDirMoved.y -= .005f;
+    }
+    if (glfwGetKey(window, GLFW_KEY_KP_8) == GLFW_PRESS) {
+        spotLightDirMoved.y += .005f;
+    }
+
     
     //pucanje
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
@@ -1999,7 +2162,6 @@ void processInput(GLFWwindow* window)
         if (voltage < 0.0f) voltage = 0.0f; // Ogranici minimalan napon
     }
     hydraulic = (voltage + 10.0) / 100.0;
-    
 }
 
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
@@ -2352,7 +2514,9 @@ void initObjects() {
     initTarget();
     initWall();
     initTrees();
+    initClouds();
     initDeath();
+    initNeedle();
 }
 
 void initPecurka() {
@@ -2382,7 +2546,7 @@ void initPecurka() {
 }
 
 void initTank() {
-    loadObject("res/tnk2.obj", tankVertices);
+    loadObject("res/tnk5.obj", tankVertices);
     glGenVertexArrays(1, &VAOTank);
     glGenBuffers(1, &VBOTank);
 
@@ -2412,10 +2576,20 @@ void drawTank(int tankShader, unsigned tankTexture) {
     //postavljanje svetlosnih vektora
     glUniform3fv(glGetUniformLocation(tankShader, "moonLightPos"), 1, glm::value_ptr(moonLightPos));
     glUniform3fv(glGetUniformLocation(tankShader, "lightBulbLightPos"), 1, glm::value_ptr(lightBulbLightPos));
-
+    glUniform3fv(glGetUniformLocation(tankShader, "canShootLightPos"), 1, glm::value_ptr(redLightPos));
     //da li je sijalica ukljucena
     glUniform1i(glGetUniformLocation(tankShader, "isLightOn"), isLightOn);
     glUniform1i(glGetUniformLocation(tankShader, "isDrawingWindow"), 0);
+
+    //if\
+
+    if (canShoot) {
+        glUniform1i(glGetUniformLocation(tankShader, "canShoot"), 1);
+    }
+    else {
+        glUniform1i(glGetUniformLocation(tankShader, "canShoot"), 0);
+    }
+
     //projekcione matrice
     int projLoc = glGetUniformLocation(tankShader, "projection");
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 2500.0f);
@@ -2463,6 +2637,103 @@ void drawTank(int tankShader, unsigned tankTexture) {
     glActiveTexture(GL_TEXTURE0); // Unbind texture (ako je potrebno)
     glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture (ako je korišćena)
     glUseProgram(0); // Unbind program
+}
+
+
+void drawNeedle(int tankShader, unsigned tankTexture) {
+    glUseProgram(tankShader);
+    //postavljanje svetlosnih vektora
+    glUniform3fv(glGetUniformLocation(tankShader, "moonLightPos"), 1, glm::value_ptr(moonLightPos));
+    glUniform3fv(glGetUniformLocation(tankShader, "lightBulbLightPos"), 1, glm::value_ptr(lightBulbLightPos));
+    glUniform3fv(glGetUniformLocation(tankShader, "canShootLightPos"), 1, glm::value_ptr(redLightPos));
+    //da li je sijalica ukljucena
+    glUniform1i(glGetUniformLocation(tankShader, "isLightOn"), isLightOn);
+    glUniform1i(glGetUniformLocation(tankShader, "isDrawingWindow"), 0);
+
+    //if\
+
+    if (canShoot) {
+        glUniform1i(glGetUniformLocation(tankShader, "canShoot"), 1);
+    }
+    else {
+        glUniform1i(glGetUniformLocation(tankShader, "canShoot"), 0);
+    }
+
+    //projekcione matrice
+    int projLoc = glGetUniformLocation(tankShader, "projection");
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 2500.0f);
+    glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+
+    // camera/view transformation
+    int viewLoc = glGetUniformLocation(tankShader, "view");
+    glm::mat4 view = camera.GetViewMatrix();
+    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+
+    int modelLoc = glGetUniformLocation(tankShader, "model");
+    glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+   // model = glm::rotate(model, glm::radians(0.0f), glm::vec3(1.0f, 0.3f, 0.5f));
+    //model = glm::translate(model, camera.Position);
+    //model = glm::translate(model, -tankPos);
+    model = glm::translate(model, needlePos);
+    model = glm::rotate(model, glm::radians(needleAngle), glm::vec3(0.f, 1.f, 0.f));
+    model = glm::scale(model, glm::vec3(NEEDLE_SCALE));
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+
+    // render bullets
+
+
+
+
+    //textura
+    glBindVertexArray(VAONeedle);
+    glActiveTexture(GL_TEXTURE0);
+
+    //glBindTexture(GL_TEXTURE_2D, xboxG);
+    glBindTexture(GL_TEXTURE_2D, tankTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);  // Ili GL_NEAREST
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    //glBindTexture(GL_TEXTURE_2D, 0);
+    glUniform1i(glGetUniformLocation(tankShader, "uTex"), 0);
+
+    glDrawArrays(GL_TRIANGLES, 0, needleVertices.size() / 8);
+
+    ///drawBullet(tankShader, tankTexture);
+   // drawWindow(tankShader, tankTexture);
+    //drawCannon()
+
+
+
+    glBindVertexArray(0); // Unbind VAO
+    glBindBuffer(GL_ARRAY_BUFFER, 0); // Unbind VBO (ako koristite)
+    glActiveTexture(GL_TEXTURE0); // Unbind texture (ako je potrebno)
+    glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture (ako je korišćena)
+    glUseProgram(0); // Unbind program
+}
+
+void initNeedle() {
+    loadObject("res/kazaljka.obj", needleVertices);
+    glGenVertexArrays(1, &VAONeedle);
+    glGenBuffers(1, &VBONeedle);
+
+    // Bind VAO
+    glBindVertexArray(VAONeedle);
+
+    // Bind VBO
+    glBindBuffer(GL_ARRAY_BUFFER, VBONeedle);
+    glBufferData(GL_ARRAY_BUFFER, needleVertices.size() * sizeof(float), needleVertices.data(), GL_STATIC_DRAW);
+
+
+    // Podesite atribute vrhova
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0); // Pozicije
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float))); // Teksture
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float))); // Normale
+    glEnableVertexAttribArray(2);
+
+    // Unbind VAO
+    glBindVertexArray(0);
+
 }
 
 void initWall() {
@@ -2608,6 +2879,81 @@ void drawTrees(int treesShader, unsigned treesTexture) {
     glActiveTexture(GL_TEXTURE0); // Unbind texture (ako je potrebno)
     glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture (ako je korišćena)
     glUseProgram(0); // Unbind program
+}
+void drawClouds(int cloudsShader, unsigned cloudsTexture) {
+    glBindVertexArray(VAOClouds);
+    glUseProgram(cloudsShader);
+    //glUniform1i(glGetUniformLocation(wallShader, "isDrawingWall"), 1);
+    //glUniform1i(glGetUniformLocation(wallShader, "isDrawingWindow"), 0);
+    glUniform3fv(glGetUniformLocation(cloudsShader, "lightPos0"), 1, glm::value_ptr(lightPos0));
+
+    int projLoc = glGetUniformLocation(cloudsShader, "projection");
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, .3f, 25500.0f);
+    glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+
+    // camera/view transformation
+    int viewLoc = glGetUniformLocation(cloudsShader, "view");
+    glm::mat4 view = camera.GetViewMatrix();
+    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+
+    int modelLoc = glGetUniformLocation(cloudsShader, "model");
+    glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+    //model = glm::rotate(model, glm::radians(0.0f), glm::vec3(1.0f, 0.3f, 0.5f));
+    //model = glm::translate(model, camera.Position);
+    //model = glm::translate(model, -tankPos);
+    //model = glm::scale(model, glm::vec3(TANK_SCALE));
+    //model = glm::translate(model, glm::vec3(0., 0.f, 100.f));
+    model = glm::rotate(model, glm::radians(angle), glm::vec3(0.f, 1.f, 0.f));
+    model = glm::translate(model, glm::vec3(0.0f, 1510.f, 0.f));
+    model = glm::translate(model, glm::vec3(0.f, 0.f, -tankMovedForward));
+    model = glm::scale(model, glm::vec3(TREES_SCALE));
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+
+    glActiveTexture(GL_TEXTURE0);
+
+    //glBindTexture(GL_TEXTURE_2D, xboxG);
+    glBindTexture(GL_TEXTURE_2D, cloudsTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);  // Ili GL_NEAREST
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    //glBindTexture(GL_TEXTURE_2D, 0);
+    glUniform1i(glGetUniformLocation(cloudsShader, "uTex"), 0);
+
+    glDrawArrays(GL_TRIANGLES, 0, cloudsVertices.size() / 8);
+
+    glBindVertexArray(0); // Unbind VAO
+    glBindBuffer(GL_ARRAY_BUFFER, 0); // Unbind VBO (ako koristite)
+    glActiveTexture(GL_TEXTURE0); // Unbind texture (ako je potrebno)
+    glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture (ako je korišćena)
+    glUseProgram(0); // Unbind program
+}
+
+
+
+
+void initClouds() {
+    loadObject("res/worldClouds.obj", cloudsVertices);
+    glGenVertexArrays(1, &VAOClouds);
+    glGenBuffers(1, &VBOClouds);
+
+    // Bind VAO
+    glBindVertexArray(VAOClouds);
+
+    // Bind VBO
+    glBindBuffer(GL_ARRAY_BUFFER, VBOClouds);
+    glBufferData(GL_ARRAY_BUFFER, cloudsVertices.size() * sizeof(float), cloudsVertices.data(), GL_STATIC_DRAW);
+
+
+    // Podesite atribute vrhova
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0); // Pozicije
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float))); // Teksture
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float))); // Normale
+    glEnableVertexAttribArray(2);
+
+    // Unbind VAO
+    glBindVertexArray(0);
+
 }
 
 
@@ -3044,7 +3390,7 @@ void renderParticles(int shader, Particle particles[MAX_PARTICLES], PARTICLE_TYP
     glBindVertexArray(VAOParticle);
 
     int projLoc = glGetUniformLocation(shader, "projection");
-    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f,15500.0f);
+    glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f,55500.0f);
     glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
     //triDTest.setMat4("projection", projection);
 
@@ -3088,7 +3434,9 @@ void renderParticles(int shader, Particle particles[MAX_PARTICLES], PARTICLE_TYP
                 model = glm::rotate(model, particles[i].rotation, glm::vec3(0.f, .0f, 1.f));
 
             }
-
+            if (type == IMPACT) {
+                //model = glm::translate(model, glm::vec3(0.f, 0.f, -tankMovedForward));
+            }
             model = glm::translate(model, particles[i].position);
             if (type == CANNON_SMOKE) {
                 //model = glm::rotate(model, glm::radians(cannonRotationAngle), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -3108,7 +3456,7 @@ void renderParticles(int shader, Particle particles[MAX_PARTICLES], PARTICLE_TYP
                 model = glm::scale(model, glm::vec3(particles[i].size / 5.f));
             }
             else if (type == IMPACT) {
-                model = glm::scale(model, glm::vec3(particles[i].size*1.25));
+                model = glm::scale(model, glm::vec3(particles[i].size*5));
             }
             else {
                 model = glm::scale(model, glm::vec3(particles[i].size / 3.f));
@@ -3178,9 +3526,9 @@ bool checkForHit(Projectile projectile, Target &target) {
         return false;
     }
     //torso
-    if ((projectile.position.y > 4 * TARGET_SCALE / 5) && (projectile.position.y < 7.6 * TARGET_SCALE / 5)) {
+    if ((projectile.position.y > 4 * TARGET_SCALE / 5) && (projectile.position.y <= 7.15 * TARGET_SCALE / 5)) {
         if ((abs(projectile.position.x - target.worldPosition.x) < 1.6 * TARGET_SCALE / 5)) {
-            if ((abs(projectile.position.z - target.worldPosition.z) < .7 * TARGET_SCALE / 5)) {
+            if ((abs(projectile.position.z - target.worldPosition.z) < 1.1 * TARGET_SCALE / 5)) {
                 //target.isAlive = false;
                 cout << "torso" << endl;
                 ret = true;
@@ -3250,4 +3598,39 @@ bool checkForHit(Projectile projectile, Target &target) {
     }
 
     return ret;
+}
+
+void checkForEnd() {
+
+    for (int i = 0; i < NUM_TARGETS; i++) {
+        if (targets[i].position.z > 4350) {
+            std::cout << "You lose" << endl;
+        }
+    }
+    bool atLeastOneAlive = false;
+    for (int i = 0; i < NUM_TARGETS; i++) {
+        if (targets[i].isAlive)
+            atLeastOneAlive = true;
+    }
+    if (!atLeastOneAlive) {
+        std::cout << "You win" << endl;
+    }
+}
+
+float findShakeAngle(float needleAngle) {
+    if (voltage < 5) {
+        return 0;
+    }
+    else if (voltage < 25) {
+        return (rand() % 5 - 2) * 0.25f;
+    }
+    else if (voltage < 45) {
+        return (rand() % 5 - 2) * 0.45f;
+    }
+    else if (voltage < 75) {
+        return (rand() % 5 - 2) * 0.85f;
+    }
+    else if (voltage <= 90) {
+        return (rand() % 5 - 2) * 1.15f;
+    }
 }

@@ -11,6 +11,7 @@ uniform sampler2D uTex;
 uniform int isNightVisionOn;
 uniform int isSpotlightOn;
 uniform float time;
+uniform int isDrawingSky;
 
 uniform vec3 spotlightLightPos;
 uniform vec3 spotlightDir;
@@ -19,14 +20,14 @@ uniform vec3 spotlightDir;
 void main() {
 
     //AmbientLight
-    //vec3 ambientLight = vec3(0.02f, 0.02f, 0.02f); //noc
-    vec3 ambientLight = vec3(0.225f, 0.225f, 0.225f); //vajb
-    
+    vec3 ambientLight = vec3(0.02f, 0.02f, 0.02f); //noc
+    //vec3 ambientLight = vec3(0.225f, 0.225f, 0.225f); //vajb
+
     //vs_normal = normalize(vs_normal);
     //Diffuse 
     vec3 posToLightDirVec = normalize(lightPos0  -vs_position );
-    //vec3 diffuseColor = vec3(.075f, .075f, .075f); //noc 
-    vec3 diffuseColor = vec3(.25f, .25f, .25f); //vajb
+    vec3 diffuseColor = vec3(.075f, .075f, .075f); //noc 
+    //vec3 diffuseColor = vec3(.25f, .25f, .25f); //vajb
 
     float diffuse = clamp(dot(posToLightDirVec, vs_normal), 0.0f, 1.0f);
     if(isNightVisionOn == 1){
@@ -40,6 +41,7 @@ void main() {
 
     //FragColor = vec4(0.9, 0.9, 0.9f, 1.0f)* (vec4(ambientLight, 1.0f) + vec4(diffuseFinal, 1.f));
     FragColor = texture(uTex, chTex) * (vec4(ambientLight, 1.0f) + vec4(diffuseFinal, 1.f));
+
     if (FragColor == vec4(0.0, 0.0, 0.0, 1.0)) {
     // Tekstura nije postavljena (prazna)
     FragColor = vec4(1.0, 0.0, 0.0, 1.0);  // Na primer, ispisivanje crvene boje za grešku
@@ -71,16 +73,16 @@ void main() {
     //gpt
     float angleIntensity = smoothstep(cutoffAngle, innerCutoffAngle, theta);
     // Slabljenje na osnovu udaljenosti
-    float constant = 1.0;
-    float linear = 0.09;
-    float quadratic = 0.032;
+    float constant = 5.0;
+    float linear = 0.003;
+    float quadratic = 0.001;
     float distanceAttenuation = 1.0 / (constant + linear * distance + quadratic * distance * distance);
 
     float spotlightIntensity = angleIntensity * distanceAttenuation;
 
     
     if(isSpotlightOn == 1){
-        FragColor = texture(uTex, chTex) * (vec4(ambientLight, 1.0f) + vec4(diffuseFinal, 1.f) + spotlightIntensity*15 *vec4(1f, 1f, 1f, 1.f));
+        FragColor = texture(uTex, chTex) * (vec4(ambientLight, 1.0f) + vec4(diffuseFinal, 1.f) + spotlightIntensity*35 *vec4(1f, 1f, 1f, 1.f));
         //FragColor += spotlightIntensity*5 *vec4(1f, 1f, 1f, 1.f);
     }
 
@@ -102,6 +104,9 @@ void main() {
 
         FragColor.rgb = nightVisionColor + vec3(noise);
 
+    }
+    if(isDrawingSky==1){
+         FragColor = texture(uTex, chTex)*vec4(0.4f, 0.4f, 0.4f, 1.0f);   
     }
     //FragColor = baseColor;
     // Dodaj noise efekat
