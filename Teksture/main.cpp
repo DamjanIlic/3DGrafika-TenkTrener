@@ -238,7 +238,8 @@ float lastFrame = 0.0f;
 
 //kraj
 void checkForEnd();
-
+float winTime = 0.0f;
+float loseTime = 0.0f;
 
 glm::vec3 calculateInitialVelocity();
 //bool isBulletFlying = false;
@@ -700,6 +701,8 @@ int main(void)
     unsigned oceanIconG = loadImageToTexture("res/oceanIcon.png");
     unsigned colossalIconG = loadImageToTexture("res/colossalIcon1Test.png");
     unsigned rumblingG = loadImageToTexture("res/RUMBLING.png");
+    unsigned winG = loadImageToTexture("res/victoryScreen.png");
+    unsigned loseG = loadImageToTexture("res/loseScreen.png");
     // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ SEJDERI ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
     unsigned int unifiedShader = createShader("basic.vert", "basic.frag");
@@ -1520,7 +1523,23 @@ int main(void)
         // glEnable(GL_DEPTH_TEST);
 
 
-
+        checkForEnd();
+        if (winTime) {
+            if ((currentFrame - winTime) < 3.f) {
+                drawtxt(unifiedShader, -1.f, 1.f, -1., 1., winG);
+            }
+            else {
+                glfwSetWindowShouldClose(window, true);
+            }
+        }
+        if (loseTime) {
+            if ((currentFrame - loseTime) < 3.f) {
+                drawtxt(unifiedShader, -1.f, 1.f, -1., 1., loseG);
+            }
+            else {
+                glfwSetWindowShouldClose(window, true);
+            }
+        }
 
 
         double moveCrossUpDown = mapValue(cannonRotationAngle, -22.5, 22.5, -1, 1.0);
@@ -1536,6 +1555,7 @@ int main(void)
 
 
         drawtxt(unifiedShader, -.0f, .0f, -.05f, .05f, colossalIconG);
+
 
       /*  glBindVertexArray(vaotest);
         glDrawElements(GL_TRIANGLES, sizeof(indices3d) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
@@ -3616,18 +3636,24 @@ bool checkForHit(Projectile projectile, Target &target) {
 
 void checkForEnd() {
 
-    for (int i = 0; i < NUM_TARGETS; i++) {
-        if (targets[i].position.z > 4350) {
-            std::cout << "You lose" << endl;
-        }
-    }
+
     bool atLeastOneAlive = false;
     for (int i = 0; i < NUM_TARGETS; i++) {
         if (targets[i].isAlive)
             atLeastOneAlive = true;
     }
     if (!atLeastOneAlive) {
+        if(winTime == 0)
+        winTime = static_cast<float>(glfwGetTime());
         std::cout << "You win" << endl;
+    }
+
+    for (int i = 0; i < NUM_TARGETS; i++) {
+        if ((targets[i].position.z > 4350) || ammo == 0) {
+            std::cout << "You lose" << endl;
+            if(loseTime == 0)
+            loseTime = static_cast<float>(glfwGetTime());
+        }
     }
 }
 
