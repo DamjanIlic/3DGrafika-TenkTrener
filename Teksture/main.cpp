@@ -1123,7 +1123,7 @@ int main(void)
         //IMPACT EXPLOPOSION RENDER I UPDATE
         if (lastShotTime > 0) {
 
-            if ((currentFrame - lastShotTime) <= 3.0f) {
+            if ((currentFrame - lastShotTime) <= 3.f) {
                 renderParticles(particleShader, cannonExplosionParticles, CANNON_EXPLOSION);
                 updateParticles(deltaTime, cannonExplosionParticles, CANNON_EXPLOSION);
             }
@@ -1136,7 +1136,7 @@ int main(void)
                     shouldCreateNewSmokeParticles = false;
                 }
             }
-            if ((currentFrame - startEmitImpact) <= 2.9f) {
+            if ((currentFrame - startEmitImpact) <= 3.f) {
                 updateParticles(deltaTime, impactExplosionParticles, IMPACT);
                 renderParticles(particleShader, impactExplosionParticles, IMPACT);
             }
