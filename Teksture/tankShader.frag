@@ -39,7 +39,7 @@ void main() {
 
     //Diffuse sijalica u tenku
     posToLightDirVec = normalize(lightBulbLightPos - vs_position);
-    diffuseColor = vec3(1f, 1f, .6f);
+    diffuseColor = vec3(1.f, 1.f, .6f);
     //diffuseColor = vec3(1f, 1f, 1f);
     diffuse = clamp(dot(posToLightDirVec, vs_normal), 0.0f, 1.0f);
 
@@ -71,7 +71,7 @@ void main() {
     
     if (FragColor == vec4(0.0, 0.0, 0.0, 1.0)) {
     // Tekstura nije postavljena (prazna)
-        FragColor = vec4(1.0, 0.0, 0.0, 1.0);  // Na primer, ispisivanje crvene boje za grešku
+        FragColor = vec4(1.0, 0.0, 0.0, 1.0);  // Na primer, ispisivanje crvene boje za gresku
     } else {
         FragColor = FragColor;  // Ako je tekstura validna, samo je koristimo
     }

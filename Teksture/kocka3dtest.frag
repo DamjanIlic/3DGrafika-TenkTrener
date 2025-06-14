@@ -44,7 +44,7 @@ void main() {
 
     if (FragColor == vec4(0.0, 0.0, 0.0, 1.0)) {
     // Tekstura nije postavljena (prazna)
-    FragColor = vec4(1.0, 0.0, 0.0, 1.0);  // Na primer, ispisivanje crvene boje za grešku
+    FragColor = vec4(1.0, 0.0, 0.0, 1.0);  // Na primer, ispisivanje crvene boje za gresku
     } else {
         //FragColor.y += .5f;
         FragColor = FragColor;  // Ako je tekstura validna, samo je koristimo
@@ -82,7 +82,7 @@ void main() {
 
     
     if(isSpotlightOn == 1){
-        FragColor = texture(uTex, chTex) * (vec4(ambientLight, 1.0f) + vec4(diffuseFinal, 1.f) + spotlightIntensity*35 *vec4(1f, 1f, 1f, 1.f));
+        FragColor = texture(uTex, chTex) * (vec4(ambientLight, 1.0f) + vec4(diffuseFinal, 1.f) + spotlightIntensity*35 *vec4(1.f, 1.f, 1.f, 1.f));
         //FragColor += spotlightIntensity*5 *vec4(1f, 1f, 1f, 1.f);
     }
 

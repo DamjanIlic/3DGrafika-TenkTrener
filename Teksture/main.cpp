@@ -2365,7 +2365,7 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
     }
 
     std::string line;
-    output.clear(); // Očistimo vektor izlaza za slučaj da već ima podataka
+    output.clear(); // Ocistimo vektor izlaza za slucaj da već ima podataka
 
     while (std::getline(file, line)) {
         std::istringstream lineStream(line);
@@ -2669,7 +2669,7 @@ void drawTank(int tankShader, unsigned tankTexture) {
     glBindVertexArray(0); // Unbind VAO
     glBindBuffer(GL_ARRAY_BUFFER, 0); // Unbind VBO (ako koristite)
     glActiveTexture(GL_TEXTURE0); // Unbind texture (ako je potrebno)
-    glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture (ako je korišćena)
+    glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture (ako je koriscena)
     glUseProgram(0); // Unbind program
 }
 
@@ -2740,7 +2740,7 @@ void drawNeedle(int tankShader, unsigned tankTexture) {
     glBindVertexArray(0); // Unbind VAO
     glBindBuffer(GL_ARRAY_BUFFER, 0); // Unbind VBO (ako koristite)
     glActiveTexture(GL_TEXTURE0); // Unbind texture (ako je potrebno)
-    glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture (ako je korišćena)
+    glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture (ako je koriscena)
     glUseProgram(0); // Unbind program
 }
 
@@ -2839,7 +2839,7 @@ void drawWall(int wallShader, unsigned wallTexture) {
     glBindVertexArray(0); // Unbind VAO
     glBindBuffer(GL_ARRAY_BUFFER, 0); // Unbind VBO (ako koristite)
     glActiveTexture(GL_TEXTURE0); // Unbind texture (ako je potrebno)
-    glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture (ako je korišćena)
+    glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture (ako je koriscena)
     glUseProgram(0); // Unbind program
 }
 
@@ -2911,7 +2911,7 @@ void drawTrees(int treesShader, unsigned treesTexture) {
     glBindVertexArray(0); // Unbind VAO
     glBindBuffer(GL_ARRAY_BUFFER, 0); // Unbind VBO (ako koristite)
     glActiveTexture(GL_TEXTURE0); // Unbind texture (ako je potrebno)
-    glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture (ako je korišćena)
+    glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture (ako je koriscena)
     glUseProgram(0); // Unbind program
 }
 void drawClouds(int cloudsShader, unsigned cloudsTexture) {
@@ -2957,7 +2957,7 @@ void drawClouds(int cloudsShader, unsigned cloudsTexture) {
     glBindVertexArray(0); // Unbind VAO
     glBindBuffer(GL_ARRAY_BUFFER, 0); // Unbind VBO (ako koristite)
     glActiveTexture(GL_TEXTURE0); // Unbind texture (ako je potrebno)
-    glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture (ako je korišćena)
+    glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture (ako je koriscena)
     glUseProgram(0); // Unbind program
 }
 
@@ -3203,7 +3203,7 @@ void drawCannon(int cannonShader, unsigned tankTexture) {
     glBindVertexArray(0); // Unbind VAO
     glBindBuffer(GL_ARRAY_BUFFER, 0); // Unbind VBO (ako koristite)
     glActiveTexture(GL_TEXTURE0); // Unbind texture (ako je potrebno)
-    glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture (ako je korišćena)
+    glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture (ako je koriscena)
     glUseProgram(0); // Unbind program
 
 }
