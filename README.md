@@ -1,4 +1,18 @@
 # 3DGrafika-TenkTrener
+# Kontrole
+- WASD - kretanje u kupoli/ nisanjenje (okretanje kupole i podizanje cevi) u nisan rezimu
+- Z - paljenje/gasenje nisan rezima (mora se pribliziti zoom ekranu)
+- O - paljenje/gasenje outside look rezima (mora se pribliziti prozoru)
+- Space - pucanje
+- R - reflektor
+- num_8 i num_5 - reflektor gore/dole
+- N - nightvision
+- '-' i '+' podesavanje voltmetra
+- Enter i 0 (num ili obicni) napred/nazad tenk
+- 4fun van zoom rezima: Q/E okretanje kupole, Y i U gore/dole cev
+
+
+# Specifikacija
 - Prikaz je sada unutar 3D kupole tenka. Okruženje van tenka je takođe 3D, a tenk se nalazi na centru 
 scene.
 - Instrumenti 2D projekta su sada postavljeni po unutrašnjosti kupole
