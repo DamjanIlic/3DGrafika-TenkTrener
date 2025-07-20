@@ -42,16 +42,16 @@
     <None Include="circle.vert">
       <Filter>Source Files\Shader Files</Filter>
     </None>
-    <None Include="basic.frag" />
-    <None Include="basic.vert" />
     <None Include="panorama.frag" />
     <None Include="panorama.vert" />
     <None Include="kocka3dtest.vert" />
-    <None Include="kocka3dtest.frag" />
     <None Include="tankShader.vert" />
-    <None Include="tankShader.frag" />
     <None Include="particle.vert" />
     <None Include="particle.frag" />
+    <None Include="basic.frag" />
+    <None Include="basic.vert" />
+    <None Include="tankShader.frag" />
+    <None Include="kocka3dtest.frag" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">

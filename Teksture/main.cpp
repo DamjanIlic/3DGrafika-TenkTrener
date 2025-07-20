@@ -501,7 +501,7 @@ struct Target {
 };
 
 const int NUM_TARGETS = 20;
-
+int lastFrameIndex = -1;
 Target targets[NUM_TARGETS];
 void initTargetPositions();
 glm::vec3 calculateWorldPositionForTarget(glm::vec3 position, glm::mat4 model);
@@ -1177,7 +1177,7 @@ int main(void)
         
         //KOCKE
         int xd = static_cast<int>(currentFrame * 24 * 0.5) % 24;
-
+        int currentFrameIndex = static_cast<int>(currentFrame * 24 * 0.5);
         
         //glBindVertexArray(VAOTarget);
         glActiveTexture(GL_TEXTURE0);
@@ -1190,97 +1190,140 @@ int main(void)
         int modelLoc = glGetUniformLocation(triDTest, "model");
 
 
-        for (unsigned int i = 0; i < NUM_TARGETS; i++)
-        {
-            // calculate the model matrix for each object and pass it to shader before drawing
-            glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+        //for (unsigned int i = 0; i < NUM_TARGETS; i++)
+        //{
+        //    // calculate the model matrix for each object and pass it to shader before drawing
+        //    glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+        //    model = glm::rotate(model, glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
+        //    
+        //    //update target world position
+        //    if(targets[i].isAlive)
+        //        targets[i].position.z += 0.135f;
+        //        //targets[i].position.z += 0.05f;
+        //    targets[i].worldPosition = calculateWorldPositionForTarget(targets[i].position-glm::vec3(0.f, 0.f, tankMovedForward), model);
+        //    //targets[i].worldPosition.z += tankMovedForward;
+        //    //angle += 2.0f;
+        //    //model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.0f, 1.0f));
+        //    model = glm::translate(model, glm::vec3(0.f, 0.f, -tankMovedForward));
+        //    model = glm::translate(model, targets[i].position);
+        //    //model = glm::scale(model, glm::vec3(5.0f, 5.0f, 5.0f));
+        //    model = glm::scale(model, glm::vec3(TARGET_SCALE));
+        //    //model = glm::translate(model, cubePositions[i]);
+        //    //if (i == 0) {
+        //    //    model = glm::translate(model, )
+        //    //}
+        //    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        //    //if (targets[i].isAlive) {
+        //    //    //xd = 5;
+        //    //    //glBindVertexArray(deathAnimationFrames[xd].VAODeath);
+        //    //    //glDrawArrays(GL_TRIANGLES, 0, deathAnimationFrames[xd].deathVertices.size() / 8);
+        //    //    glBindVertexArray(walkAnimationFrames[xd].VAOTarget);
+        //    //    glDrawArrays(GL_TRIANGLES, 0, walkAnimationFrames[xd].targetVertices.size() / 8);
+        //    //}
+        //    //else {
+        //    //    if (!targets[i].deathAnimationStarted) {
+        //    //        if (xd != 20 && xd !=21) {
+        //    //            
+        //    //            glBindVertexArray(walkAnimationFrames[xd].VAOTarget);
+        //    //            glDrawArrays(GL_TRIANGLES, 0, walkAnimationFrames[xd].targetVertices.size() / 8);
+        //    //        }
+        //    //        else if(xd==20 || xd==21){
+        //    //            targets[i].deathAnimationStarted = true;
+        //    //            //targets[i].framesDone = 0;
+        //    //            glBindVertexArray(walkAnimationFrames[xd].VAOTarget);
+        //    //            glDrawArrays(GL_TRIANGLES, 0, walkAnimationFrames[xd].targetVertices.size() / 8);
+        //    //        }
+        //    //    }
+        //    //    if(targets[i].deathAnimationStarted && !targets[i].deathAnimationEnded){
+        //    //        if (xd == 20) {
+        //    //            glBindVertexArray(walkAnimationFrames[xd].VAOTarget);
+        //    //            glDrawArrays(GL_TRIANGLES, 0, walkAnimationFrames[xd].targetVertices.size() / 8);
+        //    //        }
+        //    //        if (xd == 21) {
+        //    //            glBindVertexArray(deathAnimationFrames[1].VAODeath);
+        //    //            glDrawArrays(GL_TRIANGLES, 0, deathAnimationFrames[1].deathVertices.size() / 8);
+        //    //        }
+        //    //        else if (xd == 22) {
+        //    //            glBindVertexArray(deathAnimationFrames[2].VAODeath);
+        //    //            glDrawArrays(GL_TRIANGLES, 0, deathAnimationFrames[2].deathVertices.size() / 8);
+        //    //        }
+        //    //        else if (xd == 23) {
+        //    //            glBindVertexArray(deathAnimationFrames[3].VAODeath);
+        //    //            glDrawArrays(GL_TRIANGLES, 0, deathAnimationFrames[3].deathVertices.size() / 8);
+        //    //        }
+        //    //        else {
+        //    //            if (xd < 16) {
+        //    //                glBindVertexArray(deathAnimationFrames[xd+4].VAODeath);
+        //    //                glDrawArrays(GL_TRIANGLES, 0, deathAnimationFrames[xd + 4].deathVertices.size() / 8);
+
+        //    //            }
+        //    //            if (xd == 16) {
+        //    //                glBindVertexArray(deathAnimationFrames[xd + 4].VAODeath);
+        //    //                glDrawArrays(GL_TRIANGLES, 0, deathAnimationFrames[xd + 4].deathVertices.size() / 8);
+        //    //                targets[i].deathAnimationEnded = true;
+        //    //            }
+        //    //        }
+        //    //    }
+        //    //    else if(targets[i].deathAnimationStarted && targets[i].deathAnimationEnded){
+        //    //        glBindVertexArray(deathAnimationFrames[20].VAODeath);
+        //    //        glDrawArrays(GL_TRIANGLES, 0, deathAnimationFrames[20].deathVertices.size() / 8);
+
+        //    //    }
+        //    //}
+        //    // 
+        //    //
+        //    //else {
+        //    //    glBindVertexArray(deathAnimationFrames[20].VAODeath);
+        //    //    glDrawArrays(GL_TRIANGLES, 0, deathAnimationFrames[20].deathVertices.size() / 8);
+        //    //}
+        //    //glDrawElements(GL_TRIANGLES, sizeof(indices3d) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
+        //    //glDrawArrays(GL_TRIANGLES, 0, 36);
+        //
+
+        //}
+        if (currentFrameIndex != lastFrameIndex) {
+            lastFrameIndex = currentFrameIndex;
+
+            for (unsigned int i = 0; i < NUM_TARGETS; i++) {
+                if (!targets[i].isAlive && targets[i].deathAnimationStarted && !targets[i].deathAnimationEnded) {
+                    targets[i].framesDone++;
+                    if (targets[i].framesDone >= 21) {
+                        targets[i].framesDone = 20;
+                        targets[i].deathAnimationEnded = true;
+                    }
+                }
+            }
+        }
+
+        for (unsigned int i = 0; i < NUM_TARGETS; i++) {
+            glm::mat4 model = glm::mat4(1.0f);
             model = glm::rotate(model, glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
-            
-            //update target world position
-            if(targets[i].isAlive)
+
+            if (targets[i].isAlive)
                 targets[i].position.z += 0.135f;
-                //targets[i].position.z += 0.05f;
-            targets[i].worldPosition = calculateWorldPositionForTarget(targets[i].position-glm::vec3(0.f, 0.f, tankMovedForward), model);
-            //targets[i].worldPosition.z += tankMovedForward;
-            //angle += 2.0f;
-            //model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.0f, 1.0f));
+
+            targets[i].worldPosition = calculateWorldPositionForTarget(targets[i].position - glm::vec3(0.f, 0.f, tankMovedForward), model);
             model = glm::translate(model, glm::vec3(0.f, 0.f, -tankMovedForward));
             model = glm::translate(model, targets[i].position);
-            //model = glm::scale(model, glm::vec3(5.0f, 5.0f, 5.0f));
             model = glm::scale(model, glm::vec3(TARGET_SCALE));
-            //model = glm::translate(model, cubePositions[i]);
-            //if (i == 0) {
-            //    model = glm::translate(model, )
-            //}
+
             glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+
             if (targets[i].isAlive) {
-                //xd = 5;
-                //glBindVertexArray(deathAnimationFrames[xd].VAODeath);
-                //glDrawArrays(GL_TRIANGLES, 0, deathAnimationFrames[xd].deathVertices.size() / 8);
                 glBindVertexArray(walkAnimationFrames[xd].VAOTarget);
                 glDrawArrays(GL_TRIANGLES, 0, walkAnimationFrames[xd].targetVertices.size() / 8);
             }
             else {
                 if (!targets[i].deathAnimationStarted) {
-                    if (xd != 20 && xd !=21) {
-                        
-                        glBindVertexArray(walkAnimationFrames[xd].VAOTarget);
-                        glDrawArrays(GL_TRIANGLES, 0, walkAnimationFrames[xd].targetVertices.size() / 8);
-                    }
-                    else if(xd==20 || xd==21){
-                        targets[i].deathAnimationStarted = true;
-                        //targets[i].framesDone = 0;
-                        glBindVertexArray(walkAnimationFrames[xd].VAOTarget);
-                        glDrawArrays(GL_TRIANGLES, 0, walkAnimationFrames[xd].targetVertices.size() / 8);
-                    }
+                    targets[i].deathAnimationStarted = true;
+                    targets[i].framesDone = 0;
                 }
-                if(targets[i].deathAnimationStarted && !targets[i].deathAnimationEnded){
-                    if (xd == 20) {
-                        glBindVertexArray(walkAnimationFrames[xd].VAOTarget);
-                        glDrawArrays(GL_TRIANGLES, 0, walkAnimationFrames[xd].targetVertices.size() / 8);
-                    }
-                    if (xd == 21) {
-                        glBindVertexArray(deathAnimationFrames[1].VAODeath);
-                        glDrawArrays(GL_TRIANGLES, 0, deathAnimationFrames[1].deathVertices.size() / 8);
-                    }
-                    else if (xd == 22) {
-                        glBindVertexArray(deathAnimationFrames[2].VAODeath);
-                        glDrawArrays(GL_TRIANGLES, 0, deathAnimationFrames[2].deathVertices.size() / 8);
-                    }
-                    else if (xd == 23) {
-                        glBindVertexArray(deathAnimationFrames[3].VAODeath);
-                        glDrawArrays(GL_TRIANGLES, 0, deathAnimationFrames[3].deathVertices.size() / 8);
-                    }
-                    else {
-                        if (xd < 16) {
-                            glBindVertexArray(deathAnimationFrames[xd+4].VAODeath);
-                            glDrawArrays(GL_TRIANGLES, 0, deathAnimationFrames[xd + 4].deathVertices.size() / 8);
 
-                        }
-                        if (xd == 16) {
-                            glBindVertexArray(deathAnimationFrames[xd + 4].VAODeath);
-                            glDrawArrays(GL_TRIANGLES, 0, deathAnimationFrames[xd + 4].deathVertices.size() / 8);
-                            targets[i].deathAnimationEnded = true;
-                        }
-                    }
-                }
-                else if(targets[i].deathAnimationStarted && targets[i].deathAnimationEnded){
-                    glBindVertexArray(deathAnimationFrames[20].VAODeath);
-                    glDrawArrays(GL_TRIANGLES, 0, deathAnimationFrames[20].deathVertices.size() / 8);
-
-                }
+                int deathFrame = targets[i].framesDone;
+                glBindVertexArray(deathAnimationFrames[deathFrame].VAODeath);
+                glDrawArrays(GL_TRIANGLES, 0, deathAnimationFrames[deathFrame].deathVertices.size() / 8);
             }
-            //else {
-            //    glBindVertexArray(deathAnimationFrames[20].VAODeath);
-            //    glDrawArrays(GL_TRIANGLES, 0, deathAnimationFrames[20].deathVertices.size() / 8);
-            //}
-            //glDrawElements(GL_TRIANGLES, sizeof(indices3d) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
-            //glDrawArrays(GL_TRIANGLES, 0, 36);
-        
-
         }
-
-
 
 
 
