@@ -1,4 +1,7 @@
 # 3DGrafika-TenkTrener
+
+# **Demo**
+https://youtu.be/Yt8P5wZ4m74
 # Kontrole
 - WASD - kretanje u kupoli/ nisanjenje (okretanje kupole i podizanje cevi) u nisan rezimu
 - Z - paljenje/gasenje nisan rezima (mora se pribliziti zoom ekranu)
